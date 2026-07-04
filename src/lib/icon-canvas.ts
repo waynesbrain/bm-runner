@@ -78,9 +78,11 @@ export function drawLetter(letter: string, options: LetterOptions): void {
   const size = Math.min(canvas.width, canvas.height);
   const margin = Math.ceil(size / 6); // ~3 px on a 16×16 icon
 
-  // ---- background -------------------------------------------------------
+  // ---- background (rounded rect) ----------------------------------------
   ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.beginPath();
+  ctx.roundRect(0, 0, canvas.width, canvas.height, 2);
+  ctx.fill();
 
   // ---- measure at a trial size to find the right scale ------------------
   const availableHeight = size - 2 * margin;
