@@ -48,12 +48,12 @@ export interface DrawingOptions {
 // ---- drawLetter ------------------------------------------------------------
 
 export interface LetterOptions extends DrawingOptions {
-  /** Background fill colour (default: '#2563eb') */
+  /** Background fill colour (default: '#6b6b6bff') */
   bgColor?: string;
   /** CSS font-family value (default: 'sans-serif').  A fallback of `sans-serif`
    * is appended automatically unless the caller already provides one. */
   fontFamily?: FontFamily;
-  /** Text fill colour (default: '#ffffff') */
+  /** Text fill colour (default: '#f9f9f9ff') */
   textColor?: string;
 }
 
@@ -68,8 +68,8 @@ export function drawLetter(letter: string, options: LetterOptions): void {
   const {
     canvas,
     ctx,
-    bgColor = "#626262",
-    textColor = "#ffffff",
+    bgColor = "#6b6b6bff",
+    textColor = "#f9f9f9ff",
     fontFamily: rawFontFamily = "sans-serif",
   } = options;
 
@@ -107,5 +107,5 @@ export function drawLetter(letter: string, options: LetterOptions): void {
   const baselineY = margin + m.actualBoundingBoxAscent;
 
   ctx.fillStyle = textColor;
-  ctx.fillText(letter, canvas.width / 2, baselineY);
+  ctx.fillText(letter, (canvas.width / 2) + (canvas.width / 16), baselineY);
 }
