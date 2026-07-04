@@ -156,5 +156,20 @@ async function runBookmarklet(
     log(`"${name}" executed successfully`, { tabId });
   } catch (err) {
     error(`Failed to execute "${name}"`, err);
+    // Try to show a visible alert so the user knows something went wrong.
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        world: 'MAIN',
+        func: (msg: string) => {
+          alert(msg);
+        },
+        args: [
+          `Bookmarklet Runner: Failed to run "${name}".\n\n${String(err)}`,
+        ],
+      });
+    } catch {
+      // Tab may have closed — nothing we can do.
+    }
   }
 }

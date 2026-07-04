@@ -104,17 +104,20 @@ export async function getAllBookmarklets(): Promise<BookmarkletInfo[]> {
 // Bookmarklet URL decoding
 // ---------------------------------------------------------------------------
 
+/**
+ * Leniently decode a bookmarklet URL.  Only valid %XX hex-pair sequences are
+ * decoded; malformed sequences (e.g. `%}` inside CSS rules like `width:100%}`)
+ * are left untouched.  This matches how browsers decode javascript: URLs when
+ * a bookmarklet is clicked natively.
+ */
 export function decodeBookmarklet(url: string): string {
   const trimmed = url.trim();
   const jsPrefix = 'javascript:';
   if (trimmed.startsWith(jsPrefix)) {
     const encoded = trimmed.slice(jsPrefix.length);
-    try {
-      return decodeURIComponent(encoded);
-    } catch {
-      // If decodeURIComponent fails (malformed % sequences), return as-is
-      return encoded;
-    }
+    return encoded.replace(/%([0-9A-Fa-f]{2})/g, (_match, hex) =>
+      String.fromCharCode(parseInt(hex, 16)),
+    );
   }
   return trimmed;
 }
