@@ -1,3 +1,5 @@
+/// <reference types="chrome" />
+
 import {
   getAllBookmarklets,
   loadConfig,
@@ -10,7 +12,7 @@ import {
 // DOM refs
 // ---------------------------------------------------------------------------
 
-const toolbarPicker = document.getElementById('toolbar-picker') as HTMLSelectElement;
+const toolbarPickerContainer = document.getElementById('toolbar-picker-container')!;
 const toolbarCsp = document.getElementById('toolbar-csp') as HTMLInputElement;
 const debugToggle = document.getElementById('debug-toggle') as HTMLInputElement;
 const shortcutSlots = document.getElementById('shortcut-slots') as HTMLDivElement;
@@ -28,8 +30,181 @@ let currentConfig: AppConfig | null = null;
 let bookmarklets: BookmarkletInfo[] = [];
 
 // ---------------------------------------------------------------------------
+// Custom select component
+// ---------------------------------------------------------------------------
+
+interface CustomSelect {
+  /** The wrapper element (exposes a .value property and dispatches 'change') */
+  el: HTMLElement;
+  /** Set the selected bookmarklet ID (null = none). Does NOT fire change. */
+  setValue(id: string | null): void;
+  /** Get the currently selected bookmarklet ID ('' = none). */
+  getValue(): string;
+  /** Refresh the option list (e.g. after bookmarklets are reloaded). */
+  setOptions(items: BookmarkletInfo[]): void;
+}
+
+/**
+ * Build a custom dropdown that shows bold title + gray right-aligned path
+ * for each bookmarklet option.
+ */
+function createCustomSelect(selectedId: string | null): CustomSelect {
+  let value = selectedId ?? '';
+  let options: BookmarkletInfo[] = [...bookmarklets];
+  let open = false;
+
+  // Wrapper
+  const wrapper = document.createElement('div');
+  wrapper.className = 'custom-select';
+
+  // Trigger
+  const trigger = document.createElement('div');
+  trigger.className = 'custom-select-trigger';
+  trigger.tabIndex = 0;
+
+  const triggerText = document.createElement('span');
+  triggerText.className = 'custom-select-trigger-text';
+
+  const arrow = document.createElement('span');
+  arrow.className = 'custom-select-arrow';
+  arrow.textContent = '▾';
+
+  trigger.appendChild(triggerText);
+  trigger.appendChild(arrow);
+  wrapper.appendChild(trigger);
+
+  // Dropdown
+  const dropdown = document.createElement('div');
+  dropdown.className = 'custom-select-dropdown';
+  wrapper.appendChild(dropdown);
+
+  // --- Methods ---
+
+  function renderSelected(): void {
+    triggerText.innerHTML = '';
+    if (value) {
+      const bm = options.find((b) => b.id === value);
+      if (bm) {
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'custom-select-title';
+        titleSpan.textContent = bm.title;
+
+        const pathSpan = document.createElement('span');
+        pathSpan.className = 'custom-select-path';
+        pathSpan.textContent = bm.path;
+
+        triggerText.appendChild(titleSpan);
+        triggerText.appendChild(pathSpan);
+      } else {
+        triggerText.textContent = '(deleted)';
+      }
+    } else {
+      triggerText.textContent = '(none selected)';
+    }
+  }
+
+  function renderOptions(): void {
+    dropdown.innerHTML = '';
+
+    // None option
+    const noneItem = document.createElement('div');
+    noneItem.className = 'custom-select-option' + (value === '' ? ' selected' : '');
+    noneItem.textContent = '(none selected)';
+    noneItem.addEventListener('click', () => select(''));
+    dropdown.appendChild(noneItem);
+
+    for (const bm of options) {
+      const item = document.createElement('div');
+      item.className = 'custom-select-option' + (bm.id === value ? ' selected' : '');
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'custom-select-title';
+      titleSpan.textContent = bm.title;
+
+      const pathSpan = document.createElement('span');
+      pathSpan.className = 'custom-select-path';
+      pathSpan.textContent = bm.path;
+
+      item.appendChild(titleSpan);
+      item.appendChild(pathSpan);
+      item.addEventListener('click', () => select(bm.id));
+      dropdown.appendChild(item);
+    }
+  }
+
+  function select(id: string): void {
+    if (value !== id) {
+      value = id;
+      renderSelected();
+      renderOptions();
+    }
+    close();
+    wrapper.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function openDropdown(): void {
+    open = true;
+    dropdown.classList.add('open');
+    renderOptions();
+  }
+
+  function close(): void {
+    open = false;
+    dropdown.classList.remove('open');
+  }
+
+  // --- Events ---
+
+  trigger.addEventListener('click', () => {
+    if (open) close();
+    else openDropdown();
+  });
+
+  trigger.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (open) close();
+      else openDropdown();
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target as Node)) {
+      close();
+    }
+  });
+
+  // --- Init ---
+
+  renderSelected();
+
+  return {
+    el: wrapper,
+    setValue(id: string | null): void {
+      value = id ?? '';
+      renderSelected();
+    },
+    getValue(): string {
+      return value;
+    },
+    setOptions(items: BookmarkletInfo[]): void {
+      options = items;
+      // If current value no longer exists, clear it
+      if (value && !options.some((b) => b.id === value)) {
+        value = '';
+      }
+      renderSelected();
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
+
+let toolbarSelect: CustomSelect;
+const shortcutSelects: CustomSelect[] = [];
 
 async function init(): Promise<void> {
   [bookmarklets, currentConfig] = await Promise.all([
@@ -43,7 +218,6 @@ async function init(): Promise<void> {
 
   renderToolbarSection();
   renderShortcutSection();
-  populateShortcutSlots();
 
   // Set debug toggle from stored config
   debugToggle.checked = currentConfig!.debugEnabled;
@@ -52,46 +226,12 @@ async function init(): Promise<void> {
 }
 
 function renderToolbarSection(): void {
-  // Populate the toolbar picker
-  populatePicker(toolbarPicker, currentConfig!.toolbarBookmarklet);
-
-  // Set CSP checkbox state based on the currently selected bookmarklet
+  toolbarSelect = createCustomSelect(currentConfig!.toolbarBookmarklet);
+  toolbarPickerContainer.appendChild(toolbarSelect.el);
   updateToolbarCspCheckbox();
 }
 
 function renderShortcutSection(): void {
-  // CSP checkboxes will be set when we populate the slots
-}
-
-// ---------------------------------------------------------------------------
-// Populate pickers
-// ---------------------------------------------------------------------------
-
-function populatePicker(
-  select: HTMLSelectElement,
-  selectedId: string | null,
-): void {
-  // Clear existing options (keep the first "(none)" option)
-  while (select.options.length > 1) {
-    select.options.remove(1);
-  }
-
-  for (const bm of bookmarklets) {
-    const option = document.createElement('option');
-    option.value = bm.id;
-    option.textContent = `${bm.title} in ${bm.path}`;
-    if (bm.id === selectedId) {
-      option.selected = true;
-    }
-    select.appendChild(option);
-  }
-
-  if (selectedId === null) {
-    select.value = '';
-  }
-}
-
-function populateShortcutSlots(): void {
   shortcutSlots.innerHTML = '';
 
   for (let i = 0; i < SHORTCUT_COMMANDS.length; i++) {
@@ -102,33 +242,11 @@ function populateShortcutSlots(): void {
     container.className = 'field shortcut-field';
 
     const label = document.createElement('label');
-    label.htmlFor = `shortcut-${i}`;
-    // The suggested key is in the manifest; we don't hardcode it here since
-    // the user may have remapped it in chrome://extensions/shortcuts.
     label.textContent = `Shortcut #${i + 1}:`;
 
-    const select = document.createElement('select');
-    select.id = `shortcut-${i}`;
-    select.dataset.command = command;
-
-    const noneOption = document.createElement('option');
-    noneOption.value = '';
-    noneOption.textContent = '(none selected)';
-    select.appendChild(noneOption);
-
-    for (const bm of bookmarklets) {
-      const option = document.createElement('option');
-      option.value = bm.id;
-      option.textContent = `${bm.title} in ${bm.path}`;
-      if (bm.id === assignedId) {
-        option.selected = true;
-      }
-      select.appendChild(option);
-    }
-
-    if (assignedId === null) {
-      select.value = '';
-    }
+    const sel = createCustomSelect(assignedId);
+    shortcutSelects.push(sel);
+    sel.el.dataset.command = command;
 
     const cspLabel = document.createElement('label');
     cspLabel.className = 'checkbox-label';
@@ -137,13 +255,12 @@ function populateShortcutSlots(): void {
     cspCheckbox.type = 'checkbox';
     cspCheckbox.dataset.command = command;
     cspCheckbox.className = 'csp-checkbox';
-    // CSP checkbox state is updated via updateShortcutCspCheckboxes
 
     cspLabel.appendChild(cspCheckbox);
     cspLabel.appendChild(document.createTextNode(' Disable CSP'));
 
     container.appendChild(label);
-    container.appendChild(select);
+    container.appendChild(sel.el);
     container.appendChild(cspLabel);
     shortcutSlots.appendChild(container);
   }
@@ -156,7 +273,7 @@ function populateShortcutSlots(): void {
 // ---------------------------------------------------------------------------
 
 function updateToolbarCspCheckbox(): void {
-  const selectedId = toolbarPicker.value;
+  const selectedId = toolbarSelect.getValue();
   if (selectedId) {
     toolbarCsp.checked = currentConfig!.cspDisabled[selectedId] ?? false;
   } else {
@@ -165,14 +282,13 @@ function updateToolbarCspCheckbox(): void {
 }
 
 function updateShortcutCspCheckboxes(): void {
-  for (let i = 0; i < SHORTCUT_COMMANDS.length; i++) {
-    const command = SHORTCUT_COMMANDS[i]!;
-    const select = document.getElementById(`shortcut-${i}`) as HTMLSelectElement;
+  for (const sel of shortcutSelects) {
+    const command = sel.el.dataset.command!;
     const checkbox = shortcutSlots.querySelector<HTMLInputElement>(
       `input.csp-checkbox[data-command="${command}"]`,
     );
-    if (checkbox && select) {
-      const selectedId = select.value;
+    if (checkbox) {
+      const selectedId = sel.getValue();
       if (selectedId) {
         checkbox.checked = currentConfig!.cspDisabled[selectedId] ?? false;
       } else {
@@ -188,28 +304,26 @@ function updateShortcutCspCheckboxes(): void {
 
 function bindEvents(): void {
   // Update CSP checkbox when toolbar picker changes
-  toolbarPicker.addEventListener('change', () => {
+  toolbarSelect.el.addEventListener('change', () => {
     updateToolbarCspCheckbox();
   });
 
   // Update CSP checkbox when any shortcut picker changes
-  shortcutSlots.addEventListener('change', (e) => {
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'SELECT' && target.id.startsWith('shortcut-')) {
+  for (const sel of shortcutSelects) {
+    sel.el.addEventListener('change', () => {
       updateShortcutCspCheckboxes();
-    }
-  });
+    });
+  }
 
   // Save button
   saveBtn.addEventListener('click', () => {
     saveSettings();
   });
 
-  // Shortcuts link (can't navigate directly to chrome:// URLs from a web page)
+  // Shortcuts link
   for (const link of ['shortcuts-link', 'shortcuts-link-footer']) {
     document.getElementById(link)?.addEventListener('click', (e) => {
       e.preventDefault();
-      // Write to clipboard
       navigator.clipboard.writeText('chrome://extensions/shortcuts').then(() => {
         showStatus('Copied! Paste into your address bar.', 'success');
       }).catch(() => {
@@ -218,7 +332,7 @@ function bindEvents(): void {
     });
   }
 
-  // Extensions URL — copy to clipboard on click (same pattern as shortcuts link)
+  // Extensions URL
   const extUrl = document.getElementById('extensions-url');
   if (extUrl) {
     const url = `chrome://extensions/?id=${chrome.runtime.id}`;
@@ -238,39 +352,32 @@ function bindEvents(): void {
 // ---------------------------------------------------------------------------
 
 async function saveSettings(): Promise<void> {
-  // Gather toolbar selection
-  const toolbarSelection = toolbarPicker.value || null;
+  const toolbarSelection = toolbarSelect.getValue() || null;
 
-  // Gather shortcut selections
   const shortcutSelections: Record<string, string | null> = {};
-  for (let i = 0; i < SHORTCUT_COMMANDS.length; i++) {
-    const command = SHORTCUT_COMMANDS[i]!;
-    const select = document.getElementById(`shortcut-${i}`) as HTMLSelectElement;
-    shortcutSelections[command] = select.value || null;
+  for (const sel of shortcutSelects) {
+    const command = sel.el.dataset.command!;
+    shortcutSelections[command] = sel.getValue() || null;
   }
 
-  // Gather CSP disabled flags
   const cspDisabled: Record<string, boolean> = { ...currentConfig!.cspDisabled };
 
-  // Update CSP flag for toolbar selection
   if (toolbarSelection) {
     cspDisabled[toolbarSelection] = toolbarCsp.checked;
   }
 
-  // Update CSP flags for shortcuts
-  for (let i = 0; i < SHORTCUT_COMMANDS.length; i++) {
-    const command = SHORTCUT_COMMANDS[i]!;
-    const select = document.getElementById(`shortcut-${i}`) as HTMLSelectElement;
+  for (const sel of shortcutSelects) {
+    const command = sel.el.dataset.command!;
     const checkbox = shortcutSlots.querySelector<HTMLInputElement>(
       `input.csp-checkbox[data-command="${command}"]`,
     );
-    const selectedId = select.value || null;
+    const selectedId = sel.getValue() || null;
     if (selectedId && checkbox) {
       cspDisabled[selectedId] = checkbox.checked;
     }
   }
 
-  // Clean up CSP flags for bookmarklets that are no longer assigned anywhere
+  // Clean up CSP flags for unassigned bookmarklets
   const assignedIds = new Set<string>();
   if (toolbarSelection) assignedIds.add(toolbarSelection);
   for (const id of Object.values(shortcutSelections)) {

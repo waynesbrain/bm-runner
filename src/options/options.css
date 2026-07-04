@@ -219,3 +219,121 @@ footer a:hover, .card a:hover {
 .selectable-url:hover {
   text-decoration: underline;
 }
+
+/* ---------------------------------------------------------------------------
+   Custom Select
+   --------------------------------------------------------------------------- */
+
+.custom-select {
+  position: relative;
+  flex: 1;
+  min-width: 320px;
+  font-size: 0.9rem;
+}
+
+.custom-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  min-height: 1.8em;
+}
+
+.custom-select-trigger:hover {
+  border-color: #999;
+}
+
+.custom-select-trigger:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: -1px;
+}
+
+.custom-select-trigger-text {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-select-trigger-text .custom-select-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-select-trigger-text .custom-select-path {
+  color: #888;
+  font-size: 0.85em;
+  white-space: nowrap;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.custom-select-arrow {
+  color: #888;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* Dropdown — wider than the trigger so paths aren't cramped */
+.custom-select-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: 480px;
+  margin-top: 2px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  z-index: 100;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.custom-select-dropdown.open {
+  display: block;
+}
+
+.custom-select-option {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+}
+
+.custom-select-option:hover {
+  background: #e8f0fe;
+}
+
+.custom-select-option.selected {
+  background: #d4e4fc;
+}
+
+.custom-select-option .custom-select-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-select-option .custom-select-path {
+  color: #888;
+  font-size: 0.85em;
+  white-space: nowrap;
+  margin-left: auto;
+  flex-shrink: 0;
+}
