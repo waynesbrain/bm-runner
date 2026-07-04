@@ -96,12 +96,13 @@ main {
   color: #555;
 }
 
-/* Actions */
+/* Auto-save status */
 .actions {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
+  min-height: 1.6em;
+  margin-bottom: 0.75rem;
 }
 
 button.primary {
