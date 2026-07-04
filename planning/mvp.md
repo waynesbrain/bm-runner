@@ -89,36 +89,49 @@ bookmarklet, and inject it. No global state.
 ### 2. Bookmarklet Execution in the Page Context
 
 A bookmarklet is a `javascript:` URL. The JavaScript inside runs in the *page's*
-context, with access to the page's DOM, variables, and globals. Chrome's
-`chrome.scripting.executeScript` normally runs in an *isolated world* — it has
-DOM access but not page JavaScript context.
+context, with access to the page's DOM, variables, and globals.
 
-**Solution:** MV3's `chrome.scripting.executeScript` supports
-`world: 'MAIN'`, which runs the injected script in the page's own JavaScript
-world. Inside that function, we create a `<script>` element with the bookmarklet
-code and append it to the document:
+**Why not `chrome.tabs.update({url: 'javascript:...'})`?** That's the closest
+API to "clicking a bookmark" — it navigates the current tab to the `javascript:`
+URL, just like the bookmarks bar does. Two problems:
+1. As of Chrome 117 (Sept 2023), `javascript:` URLs are **blocked in all
+   extension API methods** including `chrome.tabs.update`. [Source: Chrome
+   Extensions blog, Oct 2023](https://developer.chrome.google.cn/blog/extension-news-october-2023?hl=en).
+2. Navigating to a `javascript:` URL replaces the document with the expression's
+   return value (unless the bookmarklet appends `void(0)`). Not all bookmarklets
+   do this — `tabs.update` could blank the page by accident.
 
-```js
+**Solution:** `chrome.scripting.executeScript` with `world: 'MAIN'`. MV3
+supports running a function directly in the page's own JavaScript world. We
+decode the bookmarklet URL (strip `javascript:` prefix, `decodeURIComponent`)
+and pass the code as a string argument:
+
+```ts
 chrome.scripting.executeScript({
   target: { tabId },
   world: 'MAIN',
-  func: (code) => {
-    const s = document.createElement('script');
-    s.textContent = code;
-    document.documentElement.appendChild(s);
-    s.remove();
+  func: (code: string) => {
+    const script = document.createElement('script');
+    script.textContent = code;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
   },
   args: [decodedBookmarkletJS],
 });
 ```
 
-**Risk:** Pages with strict CSP (e.g., GitHub) may block inline scripts even
-when injected from an extension. We can't control this — it's an inherent
-limitation of bookmarklets.
+The `<script>` element approach (rather than `eval()` or `new Function()`)
+avoids being blocked by pages whose CSP restricts `eval` but allows inline
+scripts — which is the common case.
 
-**Fallback:** Try the `<script>` injection first. If we can detect failure
-(which is hard), we could fall back to `eval()` inside MAIN world — but that
-hits the same CSP wall. We document this as a known limitation.
+**Risk:** Pages with strict CSP that also block inline scripts (e.g., with a
+nonce/hash policy) may still block this. We can't control it — CSP restrictions
+on extension-injected scripts are an inherent limitation, same as with native
+bookmarklet clicks. We document this as a known limitation.
+
+**Risk:** Some bookmarklets use `document.write()` or other APIs that only work
+during document parsing. These are inherently timing-sensitive regardless of
+injection method.
 
 ### 3. Keyboard Shortcut Limits
 
