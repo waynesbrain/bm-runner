@@ -12,5 +12,4 @@
 - Generate multiple toolbar extensions that can be installed to create multiple
   bookmarklet toolbar items e.g. `bm-runner-[1, 2, 3]`
 - Generate a slightly different extension using the same core codebase, which
-  can act as an overflow menu showing bookmarklets that aren't toolbars.
-  
+  can act as an overflow menu showing bookmarklets that aren't in the toolbar.
