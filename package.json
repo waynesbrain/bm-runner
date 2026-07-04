@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node build.mjs",
     "clean": "rm -rf ext/service-worker.js ext/lib/ ext/options/options.js",
-    "lint-ts": "tsc --noEmit"
+    "lint-ts": "tsc --noEmit",
+    "lint-ts-watch": "tsc --noEmit --watch"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.270",
