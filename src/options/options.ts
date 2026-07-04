@@ -17,7 +17,6 @@ const toolbarCsp = document.getElementById('toolbar-csp') as HTMLInputElement;
 const debugToggle = document.getElementById('debug-toggle') as HTMLInputElement;
 const shortcutSlots = document.getElementById('shortcut-slots') as HTMLDivElement;
 const emptyState = document.getElementById('empty-state') as HTMLElement;
-const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
 const saveStatus = document.getElementById('save-status') as HTMLSpanElement;
 
 const SHORTCUT_COMMANDS = [
@@ -303,21 +302,43 @@ function updateShortcutCspCheckboxes(): void {
 // ---------------------------------------------------------------------------
 
 function bindEvents(): void {
-  // Update CSP checkbox when toolbar picker changes
+  const autoSave = debounce(() => saveSettings(), 400);
+
+  // Toolbar picker: update CSP checkbox + auto-save
   toolbarSelect.el.addEventListener('change', () => {
     updateToolbarCspCheckbox();
+    autoSave();
   });
 
-  // Update CSP checkbox when any shortcut picker changes
+  // Toolbar CSP checkbox: auto-save
+  toolbarCsp.addEventListener('change', () => {
+    autoSave();
+  });
+
+  // Shortcut pickers: update CSP checkboxes + auto-save
   for (const sel of shortcutSelects) {
     sel.el.addEventListener('change', () => {
       updateShortcutCspCheckboxes();
+      autoSave();
     });
   }
 
-  // Save button
-  saveBtn.addEventListener('click', () => {
-    saveSettings();
+  // Shortcut CSP checkboxes: auto-save
+  for (const sel of shortcutSelects) {
+    const command = sel.el.dataset.command!;
+    const checkbox = shortcutSlots.querySelector<HTMLInputElement>(
+      `input.csp-checkbox[data-command="${command}"]`,
+    );
+    if (checkbox) {
+      checkbox.addEventListener('change', () => {
+        autoSave();
+      });
+    }
+  }
+
+  // Debug toggle: auto-save
+  debugToggle.addEventListener('change', () => {
+    autoSave();
   });
 
   // Shortcuts link
@@ -398,12 +419,20 @@ async function saveSettings(): Promise<void> {
 
   await saveConfig(newConfig);
   currentConfig = newConfig;
-  showStatus('Saved!', 'success');
+  showStatus('Saved', 'success');
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
+  let timer: ReturnType<typeof setTimeout>;
+  return ((...args: any[]) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  }) as T;
+}
 
 function showStatus(message: string, className: string): void {
   saveStatus.textContent = message;
