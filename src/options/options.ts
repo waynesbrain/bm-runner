@@ -218,10 +218,18 @@ function bindEvents(): void {
     });
   }
 
-  // Extensions link — set the href dynamically so it includes the extension ID
-  const extLink = document.getElementById('extensions-link') as HTMLAnchorElement | null;
-  if (extLink) {
-    extLink.href = `chrome://extensions/?id=${chrome.runtime.id}`;
+  // Extensions URL — copy to clipboard on click (same pattern as shortcuts link)
+  const extUrl = document.getElementById('extensions-url');
+  if (extUrl) {
+    const url = `chrome://extensions/?id=${chrome.runtime.id}`;
+    extUrl.textContent = url;
+    extUrl.addEventListener('click', () => {
+      navigator.clipboard.writeText(url).then(() => {
+        showStatus('Copied! Paste into your address bar.', 'success');
+      }).catch(() => {
+        showStatus(`Go to ${url} in your address bar.`, '');
+      });
+    });
   }
 }
 
