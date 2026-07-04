@@ -1,0 +1,191 @@
+/* ---------------------------------------------------------------------------
+   Bookmarklet Runner — Options Page
+   --------------------------------------------------------------------------- */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background: #2563eb;
+  color: #fff;
+  padding: 1.5rem 2rem 1rem;
+}
+
+header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+header .subtitle {
+  margin: 0;
+  opacity: 0.85;
+  font-size: 0.9rem;
+}
+
+main {
+  max-width: 640px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.card p {
+  margin: 0 0 1rem;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+/* Fields */
+.field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.field label {
+  font-weight: 500;
+  min-width: 110px;
+  font-size: 0.9rem;
+}
+
+.field select {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 400 !important;
+  min-width: auto !important;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+button.primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+button.primary:hover {
+  background: #1d4ed8;
+}
+
+button.primary:active {
+  background: #1e40af;
+}
+
+#save-status {
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+#save-status.success {
+  color: #16a34a;
+}
+
+#save-status.error {
+  color: #dc2626;
+}
+
+/* Empty state */
+#empty-state ol {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.25rem;
+}
+
+#empty-state li {
+  margin-bottom: 0.25rem;
+}
+
+code {
+  background: #f0f0f0;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: #777;
+}
+
+footer a, .card a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+footer a:hover, .card a:hover {
+  text-decoration: underline;
+}
+
+/* Shortcut section */
+.shortcut-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.shortcut-field:last-child {
+  border-bottom: none;
+}
+
+.shortcut-field label {
+  min-width: 90px;
+}

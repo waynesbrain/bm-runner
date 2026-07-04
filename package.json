@@ -1,0 +1,15 @@
+{
+  "name": "bm-runner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome extension to run bookmarklets from a toolbar button and keyboard shortcuts",
+  "scripts": {
+    "build": "node build.mjs",
+    "clean": "rm -rf ext/service-worker.js ext/lib/ ext/options/options.js"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.270",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.5.0"
+  }
+}

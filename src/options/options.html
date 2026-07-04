@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Bookmarklet Runner — Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <header>
+    <h1>Bookmarklet Runner</h1>
+    <p class="subtitle">Run bookmarklets from the toolbar and keyboard shortcuts.</p>
+  </header>
+
+  <main>
+    <!-- Toolbar Bookmarklet -->
+    <section class="card">
+      <h2>Toolbar Bookmarklet</h2>
+      <p>Choose which bookmarklet runs when you click the toolbar button.</p>
+      <div class="field">
+        <label for="toolbar-picker">Bookmarklet:</label>
+        <select id="toolbar-picker">
+          <option value="">(none selected)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="checkbox-label">
+          <input type="checkbox" id="toolbar-csp">
+          Disable CSP for this bookmarklet
+        </label>
+      </div>
+    </section>
+
+    <!-- Keyboard Bookmarklets -->
+    <section class="card">
+      <h2>Keyboard Shortcuts</h2>
+      <p>
+        Assign bookmarklets to keyboard shortcuts. To change the actual key
+        bindings, visit
+        <a href="#" id="shortcuts-link">chrome://extensions/shortcuts</a>
+        (this link only works when pasted into the address bar).
+      </p>
+
+      <div id="shortcut-slots">
+        <!-- Populated by options.ts -->
+      </div>
+    </section>
+
+    <!-- Empty state -->
+    <section class="card" id="empty-state" style="display:none">
+      <h2>No Bookmarklets Found</h2>
+      <p>
+        You don't have any bookmarklets in your bookmarks yet. To create one:
+      </p>
+      <ol>
+        <li>Right-click your bookmarks bar and choose <strong>Add page</strong></li>
+        <li>Set the <strong>URL</strong> to a <code>javascript:</code> URL
+          (e.g. <code>javascript:alert('Hello, world!')</code>)</li>
+        <li>Give it a name and save</li>
+      </ol>
+      <p>Then come back to this page — your bookmarklet will appear here.</p>
+    </section>
+
+    <!-- Save -->
+    <div class="actions">
+      <button id="save-btn" class="primary">Save</button>
+      <span id="save-status"></span>
+    </div>
+  </main>
+
+  <footer>
+    <p>
+      <a href="#" id="shortcuts-link-footer">Customize keyboard shortcuts</a>
+      (opens chrome://extensions/shortcuts — paste into your address bar)
+    </p>
+  </footer>
+
+  <script src="options.js"></script>
+</body>
+</html>
