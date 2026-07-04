@@ -7,30 +7,30 @@
 // ---------------------------------------------------------------------------
 
 export const GENERIC_FONT_FAMILIES = [
-  'monospace',
-  'sans-serif',
-  'serif',
-  'cursive',
-  'fantasy',
-  'system-ui',
+  "monospace",
+  "sans-serif",
+  "serif",
+  "cursive",
+  "fantasy",
+  "system-ui",
 ] as const;
 
 /** CSS generic font family or any custom string. */
 export type FontFamily = (typeof GENERIC_FONT_FAMILIES)[number] | (string & {});
 
 /** The built-in fallback appended when the caller doesn't provide one. */
-const DEFAULT_FALLBACK = 'monospace';
+const DEFAULT_FALLBACK = "sans-serif";
 
 /**
  * Ensure the font-family value ends with a known generic so canvas rendering
  * doesn't silently degrade to the browser's default if the primary font is
  * missing.  If the last family in the list is already generic the value is
- * returned as-is; otherwise `monospace` is appended as the ultimate fallback.
+ * returned as-is; otherwise `sans-serif` is appended as the ultimate fallback.
  */
 function withFallback(fontFamily: string): string {
   const parts = fontFamily
-    .split(',')
-    .map((s) => s.trim().replace(/^['"]|['"]$/g, ''));
+    .split(",")
+    .map((s) => s.trim().replace(/^['"]|['"]$/g, ""));
   const last = parts[parts.length - 1]!;
   if ((GENERIC_FONT_FAMILIES as readonly string[]).includes(last)) {
     return fontFamily;
@@ -50,7 +50,7 @@ export interface DrawingOptions {
 export interface LetterOptions extends DrawingOptions {
   /** Background fill colour (default: '#2563eb') */
   bgColor?: string;
-  /** CSS font-family value (default: 'monospace').  A fallback of `monospace`
+  /** CSS font-family value (default: 'sans-serif').  A fallback of `sans-serif`
    * is appended automatically unless the caller already provides one. */
   fontFamily?: FontFamily;
   /** Text fill colour (default: '#ffffff') */
@@ -61,22 +61,22 @@ export interface LetterOptions extends DrawingOptions {
  * Draw a single letter onto a square canvas so it fills the available height.
  *
  * The letter is scaled to occupy the full vertical space within the canvas,
- * less a small margin (1/8 of the canvas size) on each side so the glyph
+ * less a small margin (1 / 6 of the canvas size) on each side so the glyph
  * never touches the edges.  It is centred horizontally.
  */
 export function drawLetter(letter: string, options: LetterOptions): void {
   const {
     canvas,
     ctx,
-    bgColor = '#626262',
-    textColor = '#000000',
-    fontFamily: rawFontFamily = 'monospace',
+    bgColor = "#626262",
+    textColor = "#ffffff",
+    fontFamily: rawFontFamily = "sans-serif",
   } = options;
 
   const fontFamily = withFallback(rawFontFamily);
 
   const size = Math.min(canvas.width, canvas.height);
-  const margin = Math.ceil(size / 8); // ~2 px on a 16×16 icon
+  const margin = Math.ceil(size / 6); // ~3 px on a 16×16 icon
 
   // ---- background -------------------------------------------------------
   ctx.fillStyle = bgColor;
@@ -86,8 +86,8 @@ export function drawLetter(letter: string, options: LetterOptions): void {
   const availableHeight = size - 2 * margin;
 
   ctx.font = `${availableHeight}px ${fontFamily}`;
-  ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'center';
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "center";
 
   const trialMetrics = ctx.measureText(letter);
   const trialHeight =
