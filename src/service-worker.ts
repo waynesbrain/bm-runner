@@ -5,26 +5,44 @@ import {
   isScriptableUrl,
   getBookmarkletForCommand,
   getToolbarBookmarklet,
+  truncateTitle,
   loadConfig,
   type AppConfig,
 } from './lib/bookmarklet-utils.js';
 import { log, warn, error, setDebugEnabled } from './lib/debug-log.js';
 
 // ---------------------------------------------------------------------------
-// Initialise debug logging from stored config
+// Toolbar title
+// ---------------------------------------------------------------------------
+
+async function updateToolbarTitle(config?: AppConfig): Promise<void> {
+  const info = await getToolbarBookmarklet(config);
+  if (info) {
+    chrome.action.setTitle({
+      title: `Run "${truncateTitle(info.name)}"`,
+    });
+  } else {
+    chrome.action.setTitle({ title: 'Bookmarklet Runner (no bookmarklet configured)' });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Initialise from stored config
 // ---------------------------------------------------------------------------
 
 (async () => {
   const config = await loadConfig();
   setDebugEnabled(config.debugEnabled);
+  updateToolbarTitle(config);
 })();
 
-// Keep the debug flag in sync when the user saves options.
+// Keep debug flag and toolbar title in sync when the user saves options.
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'sync' && changes.appConfig) {
     const newConfig = changes.appConfig.newValue as AppConfig | undefined;
     if (newConfig) {
       setDebugEnabled(newConfig.debugEnabled ?? false);
+      updateToolbarTitle(newConfig);
     }
   }
 });
@@ -68,11 +86,11 @@ async function handleToolbarClick(tab: chrome.tabs.Tab): Promise<void> {
     return;
   }
 
-  log('Running toolbar bookmarklet', {
+  log(`Running toolbar bookmarklet "${info.name}"`, {
     url: info.url,
     disableCsp: info.disableCsp,
   });
-  await runBookmarklet(tabId, info.url, info.disableCsp);
+  await runBookmarklet(tabId, info.name, info.url, info.disableCsp);
 }
 
 // ---------------------------------------------------------------------------
@@ -107,11 +125,11 @@ async function handleCommand(
     return;
   }
 
-  log(`Running bookmarklet for command "${command}"`, {
+  log(`Running bookmarklet "${info.name}" for command "${command}"`, {
     url: info.url,
     disableCsp: info.disableCsp,
   });
-  await runBookmarklet(tabId, info.url, info.disableCsp);
+  await runBookmarklet(tabId, info.name, info.url, info.disableCsp);
 }
 
 // ---------------------------------------------------------------------------
@@ -120,22 +138,23 @@ async function handleCommand(
 
 async function runBookmarklet(
   tabId: number,
+  name: string,
   rawUrl: string,
   disableCsp: boolean,
 ): Promise<void> {
-  log('runBookmarklet', { tabId, disableCsp });
+  log(`runBookmarklet "${name}"`, { tabId, disableCsp });
 
   try {
     if (disableCsp) {
-      log('Disabling CSP for tab', { tabId });
+      log(`Disabling CSP for tab`, { tabId });
       await disableCspForTab(tabId);
     }
 
     const code = decodeBookmarklet(rawUrl);
-    log('Injecting bookmarklet into tab', { tabId, codeLength: code.length });
+    log(`Injecting "${name}" into tab`, { tabId, codeLength: code.length });
     await executeBookmarklet(tabId, code);
-    log('Bookmarklet executed successfully', { tabId });
+    log(`"${name}" executed successfully`, { tabId });
   } catch (err) {
-    error('Failed to execute bookmarklet', err);
+    error(`Failed to execute "${name}"`, err);
   }
 }

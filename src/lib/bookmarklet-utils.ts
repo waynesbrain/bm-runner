@@ -100,6 +100,18 @@ export function decodeBookmarklet(url: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const MAX_TITLE_LENGTH = 35;
+
+/** Truncate a bookmarklet title for display in the toolbar tooltip. */
+export function truncateTitle(title: string): string {
+  if (title.length <= MAX_TITLE_LENGTH) return title;
+  return title.slice(0, MAX_TITLE_LENGTH - 1) + '…';
+}
+
+// ---------------------------------------------------------------------------
 // Bookmarklet execution
 // ---------------------------------------------------------------------------
 
@@ -217,14 +229,20 @@ export async function saveConfig(config: AppConfig): Promise<void> {
   });
 }
 
+export interface BookmarkletAssignment {
+  name: string;
+  url: string;
+  disableCsp: boolean;
+}
+
 /**
  * Given a command name (e.g. "run-bookmarklet-2"), return the assigned
- * bookmarklet URL, or null if none is configured.
+ * bookmarklet, or null if none is configured.
  */
 export async function getBookmarkletForCommand(
   command: string,
   config?: AppConfig,
-): Promise<{ url: string; disableCsp: boolean } | null> {
+): Promise<BookmarkletAssignment | null> {
   const cfg = config ?? (await loadConfig());
   const bookmarkletId = cfg.shortcutBookmarklets[command] ?? null;
   if (!bookmarkletId) return null;
@@ -235,6 +253,7 @@ export async function getBookmarkletForCommand(
   if (!match) return null; // bookmarklet was deleted
 
   return {
+    name: match.title,
     url: match.url,
     disableCsp: cfg.cspDisabled[bookmarkletId] ?? false,
   };
@@ -245,7 +264,7 @@ export async function getBookmarkletForCommand(
  */
 export async function getToolbarBookmarklet(
   config?: AppConfig,
-): Promise<{ url: string; disableCsp: boolean } | null> {
+): Promise<BookmarkletAssignment | null> {
   const cfg = config ?? (await loadConfig());
   if (!cfg.toolbarBookmarklet) return null;
 
@@ -254,6 +273,7 @@ export async function getToolbarBookmarklet(
   if (!match) return null;
 
   return {
+    name: match.title,
     url: match.url,
     disableCsp: cfg.cspDisabled[cfg.toolbarBookmarklet] ?? false,
   };
