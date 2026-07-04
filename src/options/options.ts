@@ -79,7 +79,7 @@ function populatePicker(
   for (const bm of bookmarklets) {
     const option = document.createElement('option');
     option.value = bm.id;
-    option.textContent = `${bm.title} (${truncateUrl(bm.url)})`;
+    option.textContent = `${bm.title} in ${bm.path}`;
     if (bm.id === selectedId) {
       option.selected = true;
     }
@@ -119,7 +119,7 @@ function populateShortcutSlots(): void {
     for (const bm of bookmarklets) {
       const option = document.createElement('option');
       option.value = bm.id;
-      option.textContent = `${bm.title} (${truncateUrl(bm.url)})`;
+      option.textContent = `${bm.title} in ${bm.path}`;
       if (bm.id === assignedId) {
         option.selected = true;
       }
@@ -297,11 +297,6 @@ async function saveSettings(): Promise<void> {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function truncateUrl(url: string, maxLen = 50): string {
-  if (url.length <= maxLen) return url;
-  return url.slice(0, maxLen - 3) + '...';
-}
 
 function showStatus(message: string, className: string): void {
   saveStatus.textContent = message;

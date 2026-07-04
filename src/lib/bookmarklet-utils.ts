@@ -6,6 +6,8 @@ export interface BookmarkletInfo {
   id: string;
   title: string;
   url: string;
+  /** Folder path from the bookmarks root, e.g. "/b/" or "[Other bookmarks]/b/" */
+  path: string;
 }
 
 export interface AppConfig {
@@ -41,18 +43,32 @@ interface BookmarkTreeNode {
   children?: BookmarkTreeNode[];
 }
 
-function walkTree(nodes: BookmarkTreeNode[], results: BookmarkletInfo[]): void {
+function walkTree(
+  nodes: BookmarkTreeNode[],
+  results: BookmarkletInfo[],
+  path: string,
+): void {
   for (const node of nodes) {
     if (node.url !== undefined) {
       // It's a bookmark (not a folder)
       if (isBookmarklet(node.url)) {
-        results.push({ id: node.id, title: node.title, url: node.url });
+        results.push({ id: node.id, title: node.title, url: node.url, path });
       }
     }
     if (node.children) {
-      walkTree(node.children, results);
+      walkTree(node.children, results, `${path}${node.title}/`);
     }
   }
+}
+
+/**
+ * Build the root path segment from the top-level bookmark folder name.
+ * "Bookmarks bar" becomes the implicit root ("/"), "Other bookmarks"
+ * and anything else gets bracketed.
+ */
+function rootPath(folderName: string): string {
+  if (folderName === 'Bookmarks bar') return '/';
+  return `[${folderName}]/`;
 }
 
 /**
@@ -73,7 +89,11 @@ export async function getAllBookmarklets(): Promise<BookmarkletInfo[]> {
     chrome.bookmarks.getTree((tree) => {
       const results: BookmarkletInfo[] = [];
       if (tree && tree.length > 0 && tree[0]?.children) {
-        walkTree(tree[0].children, results);
+        for (const rootFolder of tree[0].children) {
+          if (rootFolder.children) {
+            walkTree(rootFolder.children, results, rootPath(rootFolder.title));
+          }
+        }
       }
       resolve(results);
     });
