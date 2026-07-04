@@ -11,6 +11,11 @@ The reference codebase (`chrome-bookmarklet-manager`) is a *bookmarklet editor*
 built ~2018 on Manifest V2 with Vue 2 and Monaco. We are building a *bookmarklet
 runner* on Manifest V3 — different purpose, different architecture.
 
+**MVP distribution:** Developer install only (load unpacked from `ext/`).
+Release planning (Chrome Web Store, packaging, versioning) will be in a separate
+document. The README will include step-by-step developer installation
+instructions.
+
 ---
 
 ## Architecture
@@ -75,7 +80,7 @@ Everything the reference does must be re-thought for MV3:
 | Background | Persistent background page | Ephemeral service worker |
 | Toolbar button | `browser_action` | `action` |
 | Script injection | `chrome.tabs.executeScript` | `chrome.scripting.executeScript` |
-| Permissions | `tabs` | `scripting` + `activeTab` |
+| Permissions | `tabs` | `scripting` + `activeTab` + `bookmarks` + `storage` + `declarativeNetRequest` |
 
 **Risk:** The service worker can be terminated at any time. All state must live
 in `chrome.storage` — nothing in global variables survives across wake-ups.
@@ -133,7 +138,74 @@ bookmarklet clicks. We document this as a known limitation.
 during document parsing. These are inherently timing-sensitive regardless of
 injection method.
 
-### 3. Keyboard Shortcut Limits
+**Risk:** Pages with strict CSP (e.g., GitHub) may block inline scripts even
+when injected from an extension via `world: 'MAIN'`. See §8 for the CSP disable
+option that mitigates this.
+
+### 3. Optional CSP Disable Per Bookmarklet
+
+Some bookmarklets are blocked by the page's Content-Security-Policy — the
+`<script>` injection we do from `world: 'MAIN'` can still be blocked by a
+strict CSP that requires nonces or hashes. For users who don't care about the
+security implications, we offer an option to strip CSP headers before running
+a bookmarklet.
+
+**Approach:** Use `chrome.declarativeNetRequest.updateSessionRules` (MV3,
+no host permissions needed) to add a temporary rule that removes the
+`content-security-policy` response header for the current tab. The rule is
+scoped to the tab via the `tabIds` condition — it doesn't affect other tabs.
+
+```ts
+// Before injecting the bookmarklet:
+await chrome.declarativeNetRequest.updateSessionRules({
+  addRules: [{
+    id: 1,
+    priority: 1,
+    action: {
+      type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
+      responseHeaders: [{
+        header: 'content-security-policy',
+        operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
+      }],
+    },
+    condition: {
+      tabIds: [tabId],
+      resourceTypes: ['main_frame', 'sub_frame'],
+    },
+  }],
+});
+// ... inject bookmarklet via executeScript ...
+// The rule can stay active for subsequent runs on this tab, or be removed.
+```
+
+**References:** [PhilGrayson/chrome-csp-disable](https://github.com/PhilGrayson/chrome-csp-disable)
+(60K users, same approach), [lisonge/Disable-CSP](https://github.com/lisonge/Disable-CSP)
+(also strips `x-webkit-csp`, `x-frame-options`, and `<meta>` CSP tags).
+
+**Design for MVP:** Each bookmarklet assignment in the options page gets a
+checkbox: "Disable CSP for this bookmarklet." When checked, the service worker
+adds the declarativeNetRequest rule for the tab before injecting. The rule
+persists for the tab's lifetime (until navigation or tab close) — subsequent
+runs on the same tab skip the rule setup since it's already active.
+
+**Additional permission needed:** `declarativeNetRequest` (no host permissions
+required — the `tabIds` condition scopes it to the active tab).
+
+**Risk:** This only strips the HTTP header CSP. Some pages also set CSP via
+`<meta>` tags. The lisonge extension handles this via the `debugger` API +
+devtools page, but that requires broad permissions (`debugger`, `<all_urls>`).
+For the MVP we only strip HTTP header CSP. We document this limitation.
+
+**Risk:** The rule operates on subsequent navigations/requests. If the page is
+already loaded, the CSP header was already enforced and the rule won't
+retroactively unblock already-blocked resources. The injected bookmarklet runs
+in `world: 'MAIN'` which bypasses some CSP restrictions already — this toggle
+is for the remaining cases.
+
+**Risk:** The `tabIds` condition requires Chrome 101+. Current Chrome is 149,
+Brave 1.91 is based on a recent Chromium, so this is fine.
+
+### 4. Keyboard Shortcut Limits
 
 Chrome's `commands` API allows at most **4 declared shortcuts** per extension.
 You declare them in `manifest.json` with suggested key bindings (e.g.,
@@ -170,7 +242,7 @@ mentions offering this option "if Chrome supports it" — the answer is "yes, bu
 only the user can change it." Our options page should include a link to
 `chrome://extensions/shortcuts` with instructions.
 
-### 4. Bookmarklet Detection & Decoding
+### 5. Bookmarklet Detection & Decoding
 
 We need to walk the bookmark tree and find all nodes whose URL starts with
 `javascript:`. The bookmark tree is a nested structure (folders contain
@@ -191,7 +263,7 @@ which are not real bookmarklets. We can't distinguish these from real
 bookmarklets automatically. The user sees them in the picker and can choose
 which to use.
 
-### 5. Service Worker Ephemerality
+### 6. Service Worker Ephemerality
 
 MV3 service workers don't stay alive. They wake, handle an event, and may be
 terminated within ~30 seconds of idling.
@@ -204,7 +276,7 @@ terminated within ~30 seconds of idling.
 This is actually simpler than it sounds for our use case — we just read config
 and inject a script, both of which are fire-and-forget async operations.
 
-### 6. `activeTab` Permission & Script Injection Timing
+### 7. `activeTab` Permission & Script Injection Timing
 
 We use the `activeTab` permission (granted when the user clicks the toolbar
 button or invokes a keyboard shortcut) to inject scripts. This avoids needing
@@ -218,12 +290,39 @@ can't. That's fine for this use case — bookmarklets run on the current page.
 `edge://`) cannot be scripted, even with `activeTab`. We need to handle this
 gracefully (check `tab.url`, show an error if the URL scheme isn't `http`/`https`).
 
-### 7. Storage Sync vs Local
+### 8. Storage Sync vs Local
 
 `chrome.storage.sync` syncs across the user's Chrome instances. It has a per-item
 quota of 8 KB and a total of 100 KB. Our config is tiny (a few strings), so sync
 is the right choice. If we hit limits post-MVP, we can split hot data to sync
 and cold data to local.
+
+## Data Model
+
+```ts
+interface BookmarkletInfo {
+  id: string;       // Chrome bookmark ID
+  title: string;    // bookmark title
+  url: string;      // raw javascript:... URL
+}
+
+interface BookmarkletAssignment {
+  bookmarkletId: string;    // which bookmarklet to run (maps to BookmarkletInfo.id)
+  disableCsp: boolean;      // strip CSP headers before injecting
+}
+
+interface AppConfig {
+  toolbarBookmarklet: string | null;              // BookmarkletInfo.id for toolbar click
+  shortcutBookmarklets: Record<string, string | null>;  // "run-bookmarklet-N" → BookmarkletInfo.id
+  cspDisabled: Record<string, boolean>;           // BookmarkletInfo.id → disableCsp flag
+}
+```
+
+The `cspDisabled` map lets us look up whether CSP should be stripped for any
+given bookmarklet assignment. The bookmarklet ID is the key — if the same
+bookmarklet is assigned to both the toolbar and a shortcut, they share the
+same CSP disable flag (which is the right behavior: a bookmarklet either needs
+CSP bypass or it doesn't, regardless of how it's invoked).
 
 ---
 
@@ -239,8 +338,12 @@ and cold data to local.
      shortcut slots
 4. **Bookmarklet scanning:** On options page load, scans all bookmarks and
    populates dropdowns with detected bookmarklets.
-5. **Graceful handling** of restricted pages (`chrome://`, etc.).
-6. **Link** to `chrome://extensions/shortcuts` so users can customize key
+5. **Optional CSP disable:** Per-bookmarklet checkbox to strip
+   `content-security-policy` response headers before injection. Uses
+   `declarativeNetRequest` session rules scoped to the current tab — no broad
+   host permissions needed. Off by default.
+6. **Graceful handling** of restricted pages (`chrome://`, etc.).
+7. **Link** to `chrome://extensions/shortcuts` so users can customize key
    bindings and prevent page overrides.
 
 ## Out of Scope (post-MVP)
@@ -250,8 +353,12 @@ and cold data to local.
 - More than 4 keyboard shortcuts (multi-instance workaround deferred)
 - Custom keyboard shortcut assignment from within the options page (delegated to
   Chrome's built-in UI)
+- `<meta>` tag CSP removal (requires `debugger` API + `<all_urls>` — too
+  invasive for MVP; HTTP header CSP removal covers most cases)
 - Internationalization
-- Publishing to Chrome Web Store (until MVP is working)
+- Publishing to Chrome Web Store or any packaged distribution (release planning
+  will be in a separate document; MVP is developer-install only via "Load
+  unpacked")
 
 ---
 
@@ -320,9 +427,11 @@ bm-runner/
    - `getAllBookmarklets()` — walks bookmark tree, returns flat list of
      `{id, title, url}` for `javascript:` URLs
    - `decodeBookmarklet(url)` — strips `javascript:` prefix, decodes
-   - `executeBookmarklet(tabId, bookmarkletUrl)` — decodes and injects via
+   - `executeBookmarklet(tabId, bookmarkletUrl, disableCsp?)` — optionally adds
+     declarativeNetRequest rule to strip CSP, then injects via
      `chrome.scripting.executeScript` with `world: 'MAIN'`
-   - Types: `BookmarkletInfo`, `AppConfig`
+   - Types: `BookmarkletInfo`, `AppConfig`, `BookmarkletAssignment` (see Data
+     Model above)
 
 ### Phase 4: Service Worker Wiring
 10. Wire `action.onClicked` → reads toolbar choice from storage, runs
@@ -337,7 +446,8 @@ bm-runner/
 14. Create `src/options/options.ts`:
     - On load: scan bookmarks, populate dropdowns
     - Load saved config from `chrome.storage.sync`, set dropdown values
-    - On save: write config to `chrome.storage.sync`
+    - Each bookmarklet assignment row has a "Disable CSP" checkbox
+    - On save: write config (including CSP disable flags) to `chrome.storage.sync`
 15. Create `src/options/options.css` for basic styling (copied to ext/ during build)
 16. Add a "Customize keyboard shortcuts" link to `chrome://extensions/shortcuts`
 
@@ -347,6 +457,15 @@ bm-runner/
 18. Handle `file://` and `chrome://` URLs gracefully in the service worker
 19. Test the "Allow extensions to override page shortcuts" user flow and document
     it in the options page
+
+### Phase 7: Developer Installation Docs
+20. Update README with step-by-step developer installation instructions:
+    - Clone repo, `npm install`, `npm run build`
+    - Open `chrome://extensions` (or `brave://extensions`), enable Developer mode
+    - "Load unpacked" → select the `ext/` directory
+    - Pin the extension to the toolbar
+    - How to set up bookmarklets if you don't have any
+    - How to customize keyboard shortcuts at `chrome://extensions/shortcuts`
 
 ---
 
