@@ -18,6 +18,9 @@ const debugToggle = document.getElementById('debug-toggle') as HTMLInputElement;
 const shortcutSlots = document.getElementById('shortcut-slots') as HTMLDivElement;
 const emptyState = document.getElementById('empty-state') as HTMLElement;
 const saveStatus = document.getElementById('save-status') as HTMLSpanElement;
+const undoBtn = document.getElementById('undo-btn') as HTMLButtonElement;
+
+const undoStack: AppConfig[] = [];
 
 const SHORTCUT_COMMANDS = [
   'run-bookmarklet-1',
@@ -341,6 +344,11 @@ function bindEvents(): void {
     autoSave();
   });
 
+  // Undo button
+  undoBtn.addEventListener('click', () => {
+    undoLastChange();
+  });
+
   // Shortcuts link
   for (const link of ['shortcuts-link', 'shortcuts-link-footer']) {
     document.getElementById(link)?.addEventListener('click', (e) => {
@@ -417,6 +425,12 @@ async function saveSettings(): Promise<void> {
     debugEnabled: debugToggle.checked,
   };
 
+  // Push current state for undo before overwriting
+  if (currentConfig) {
+    undoStack.push(structuredClone(currentConfig));
+    updateUndoButton();
+  }
+
   await saveConfig(newConfig);
   currentConfig = newConfig;
   showStatus('Saved', 'success');
@@ -425,6 +439,42 @@ async function saveSettings(): Promise<void> {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+function updateUndoButton(): void {
+  undoBtn.disabled = undoStack.length === 0;
+}
+
+function undoLastChange(): void {
+  if (undoStack.length === 0) return;
+
+  const previousConfig = undoStack.pop()!;
+  updateUndoButton();
+
+  // Restore UI to the previous state
+  applyConfig(previousConfig);
+
+  // Persist the undone state
+  saveConfig(previousConfig);
+  currentConfig = previousConfig;
+  showStatus('Undone', 'success');
+}
+
+/** Apply a config snapshot to all UI controls without firing change events. */
+function applyConfig(config: AppConfig): void {
+  // Toolbar picker
+  toolbarSelect.setValue(config.toolbarBookmarklet);
+  updateToolbarCspCheckbox();
+
+  // Shortcut pickers
+  for (const sel of shortcutSelects) {
+    const command = sel.el.dataset.command!;
+    sel.setValue(config.shortcutBookmarklets[command] ?? null);
+  }
+  updateShortcutCspCheckboxes();
+
+  // Debug toggle
+  debugToggle.checked = config.debugEnabled;
+}
 
 function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
   let timer: ReturnType<typeof setTimeout>;
