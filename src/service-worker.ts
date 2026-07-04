@@ -10,19 +10,41 @@ import {
   type AppConfig,
 } from './lib/bookmarklet-utils.js';
 import { log, warn, error, setDebugEnabled } from './lib/debug-log.js';
+import { drawLetter } from './lib/icon-canvas.js';
 
 // ---------------------------------------------------------------------------
-// Toolbar title
+// Toolbar button
 // ---------------------------------------------------------------------------
 
-async function updateToolbarTitle(config?: AppConfig): Promise<void> {
+/** Icon sizes generated for the toolbar action (covers 1× and 2× displays). */
+const TOOLBAR_ICON_SIZES = [16, 32];
+
+async function updateToolbar(config?: AppConfig): Promise<void> {
   const info = await getToolbarBookmarklet(config);
   if (info) {
-    chrome.action.setTitle({
-      title: `Run "${truncateTitle(info.name)}"`,
-    });
+    const title = `Run "${truncateTitle(info.name)}"`;
+    chrome.action.setTitle({ title });
+
+    // Dynamically render an icon from the first letter of the bookmarklet title.
+    const letter = info.name.trim().charAt(0).toUpperCase() || 'B';
+    const imageData: Record<number, ImageData> = {};
+    for (const size of TOOLBAR_ICON_SIZES) {
+      const canvas = new OffscreenCanvas(size, size);
+      const ctx = canvas.getContext('2d')!;
+      drawLetter(letter, { canvas, ctx });
+      imageData[size] = ctx.getImageData(0, 0, size, size);
+    }
+    chrome.action.setIcon({ imageData });
   } else {
     chrome.action.setTitle({ title: 'Bookmarklet Runner (no bookmarklet configured)' });
+    // Reset to the static icons declared in the manifest.
+    chrome.action.setIcon({
+      path: {
+        '16': 'icons/icon-16.png',
+        '48': 'icons/icon-48.png',
+        '128': 'icons/icon-128.png',
+      },
+    });
   }
 }
 
@@ -33,7 +55,7 @@ async function updateToolbarTitle(config?: AppConfig): Promise<void> {
 (async () => {
   const config = await loadConfig();
   setDebugEnabled(config.debugEnabled);
-  updateToolbarTitle(config);
+  updateToolbar(config);
 })();
 
 // Keep debug flag and toolbar title in sync when the user saves options.
@@ -42,7 +64,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     const newConfig = changes.appConfig.newValue as AppConfig | undefined;
     if (newConfig) {
       setDebugEnabled(newConfig.debugEnabled ?? false);
-      updateToolbarTitle(newConfig);
+      updateToolbar(newConfig);
     }
   }
 });
