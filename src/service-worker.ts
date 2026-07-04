@@ -16,8 +16,8 @@ import { drawLetter } from './lib/icon-canvas.js';
 // Toolbar button
 // ---------------------------------------------------------------------------
 
-/** Icon sizes generated for the toolbar action (covers 1× and 2× displays). */
-const TOOLBAR_ICON_SIZES = [16, 32];
+/** Icon sizes generated for the toolbar action (covers 1×, 2×, and extensions page). */
+const TOOLBAR_ICON_SIZES = [16, 48, 128];
 
 async function updateToolbar(config?: AppConfig): Promise<void> {
   const info = await getToolbarBookmarklet(config);
