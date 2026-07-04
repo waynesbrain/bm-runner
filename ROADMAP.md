@@ -4,7 +4,7 @@
 
 - ~~Open options in new tab when toolbar button bookmarklet undefined.~~
 - ~~Save options automatically.~~
-- Add an undo feature to undo changes made while the options page is open.
+- ~~Add an undo feature to undo changes made while the options page is open.~~
 
 # Mileston Version 2.0.0
 

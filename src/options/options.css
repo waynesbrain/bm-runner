@@ -105,6 +105,11 @@ main {
   margin-bottom: 0.75rem;
 }
 
+.undo-actions {
+  display: flex;
+  gap: 2rem;
+}
+
 /* Undo button — subtle, left-aligned */
 button.undo {
   background: none;
@@ -148,8 +153,11 @@ button.primary:active {
 }
 
 #save-status {
+  display: inline-flex;
+  flex: 1;
   font-size: 0.9rem;
   font-weight: 500;
+  justify-content: flex-end;
   transition: opacity 0.2s;
 }
 

@@ -19,6 +19,7 @@ const shortcutSlots = document.getElementById('shortcut-slots') as HTMLDivElemen
 const emptyState = document.getElementById('empty-state') as HTMLElement;
 const saveStatus = document.getElementById('save-status') as HTMLSpanElement;
 const undoBtn = document.getElementById('undo-btn') as HTMLButtonElement;
+const undoAllBtn = document.getElementById('undo-all-btn') as HTMLButtonElement;
 
 const undoStack: AppConfig[] = [];
 
@@ -349,6 +350,11 @@ function bindEvents(): void {
     undoLastChange();
   });
 
+  // Undo All button
+  undoAllBtn.addEventListener('click', () => {
+    undoAllChanges();
+  });
+
   // Shortcuts link
   for (const link of ['shortcuts-link', 'shortcuts-link-footer']) {
     document.getElementById(link)?.addEventListener('click', (e) => {
@@ -441,7 +447,9 @@ async function saveSettings(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 function updateUndoButton(): void {
-  undoBtn.disabled = undoStack.length === 0;
+  const hasChanges = undoStack.length > 0;
+  undoBtn.disabled = !hasChanges;
+  undoAllBtn.disabled = !hasChanges;
 }
 
 function undoLastChange(): void {
@@ -457,6 +465,21 @@ function undoLastChange(): void {
   saveConfig(previousConfig);
   currentConfig = previousConfig;
   showStatus('Undone', 'success');
+}
+
+function undoAllChanges(): void {
+  if (undoStack.length === 0) return;
+
+  // The first (bottom) entry is the state right after page load —
+  // restoring it undoes everything.
+  const originalConfig = undoStack[0]!;
+  undoStack.length = 0;
+  updateUndoButton();
+
+  applyConfig(originalConfig);
+  saveConfig(originalConfig);
+  currentConfig = originalConfig;
+  showStatus('All changes undone', 'success');
 }
 
 /** Apply a config snapshot to all UI controls without firing change events. */
