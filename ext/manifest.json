@@ -19,14 +19,18 @@
     }
   },
   "background": {
-    "service_worker": "service-worker.js"
+    "service_worker": "service-worker.js",
+    "type": "module"
   },
   "permissions": [
     "bookmarks",
-    "activeTab",
     "storage",
     "scripting",
     "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
   ],
   "commands": {
     "run-bookmarklet-1": {
