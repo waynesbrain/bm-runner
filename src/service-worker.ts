@@ -73,6 +73,13 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 // Top-level event listeners (registered synchronously — MV3 requirement)
 // ---------------------------------------------------------------------------
 
+// Wake the service worker on browser startup so the dynamic toolbar icon
+// is restored immediately instead of showing the manifest default_icon until
+// the user clicks the button for the first time.
+chrome.runtime.onStartup.addListener(() => {
+  updateToolbar();
+});
+
 chrome.action.onClicked.addListener((tab) => {
   handleToolbarClick(tab);
 });
