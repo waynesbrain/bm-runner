@@ -4,6 +4,18 @@
 bookmarklets from a Chrome toolbar button and to run other bookmarklets from a
 set of configurable keyboard shortcuts.
 
+## Project Name
+
+> `HUMOR` 😓 `IGNORE`
+
+_If_ the project name **bm-runner** reminds you of _bowel movements_, that's on
+you. Nobody is taking a massive bowel movement and sh!#@ting this extension out
+because Google is continually removing user freedoms and killing 20 year old
+extensions like `kill-sticky`, extensions which may also work perfectly fine as
+bookmarklets, but that you'd much rather have in the old spot on the toolbar.
+
+> `OBEY` 🫣 `CONSUME`
+
 ## Installation
 
 _TODO: Add installation links or instructions here after we ship._
