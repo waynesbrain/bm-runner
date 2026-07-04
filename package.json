@@ -5,7 +5,8 @@
   "description": "Chrome extension to run bookmarklets from a toolbar button and keyboard shortcuts",
   "scripts": {
     "build": "node build.mjs",
-    "clean": "rm -rf ext/service-worker.js ext/lib/ ext/options/options.js"
+    "clean": "rm -rf ext/service-worker.js ext/lib/ ext/options/options.js",
+    "lint-ts": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.270",
