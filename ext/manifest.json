@@ -41,10 +41,6 @@
       "suggested_key": { "default": "Ctrl+Shift+3" },
       "description": "Run bookmarklet #3"
     },
-    "run-bookmarklet-4": {
-      "suggested_key": { "default": "Ctrl+Shift+4" },
-      "description": "Run bookmarklet #4"
-    },
     "_execute_action": {
       "suggested_key": { "default": "Ctrl+Shift+B" },
       "description": "Run the toolbar bookmarklet"

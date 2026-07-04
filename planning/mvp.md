@@ -207,24 +207,25 @@ Brave 1.91 is based on a recent Chromium, so this is fine.
 
 ### 4. Keyboard Shortcut Limits
 
-Chrome's `commands` API allows at most **4 declared shortcuts** per extension.
-You declare them in `manifest.json` with suggested key bindings (e.g.,
-`Ctrl+Shift+1`), and users can remap them at `chrome://extensions/shortcuts`.
+Chrome's `commands` API allows at most **4 declared shortcuts** per extension
+(including the reserved `_execute_action`). You declare them in `manifest.json`
+with suggested key bindings (e.g., `Ctrl+Shift+1`), and users can remap them at
+`chrome://extensions/shortcuts`.
 
-**Design for MVP:** We declare 4 command slots in the manifest:
+**Design for MVP:** We declare 4 commands total:
 
 ```json
 "commands": {
   "run-bookmarklet-1": { "suggested_key": { "default": "Ctrl+Shift+1" }, "description": "Run bookmarklet #1" },
   "run-bookmarklet-2": { "suggested_key": { "default": "Ctrl+Shift+2" }, "description": "Run bookmarklet #2" },
   "run-bookmarklet-3": { "suggested_key": { "default": "Ctrl+Shift+3" }, "description": "Run bookmarklet #3" },
-  "run-bookmarklet-4": { "suggested_key": { "default": "Ctrl+Shift+4" }, "description": "Run bookmarklet #4" },
   "_execute_action": { "suggested_key": { "default": "Ctrl+Shift+B" } }
 }
 ```
 
-The `_execute_action` built-in command fires the toolbar button action without
-clicking — giving us a bonus shortcut.
+That's 3 assignable bookmarklet shortcuts + 1 toolbar shortcut. The
+`_execute_action` built-in command fires the toolbar button action without
+clicking.
 
 Each `run-bookmarklet-N` command maps to a user-configurable bookmarklet via the
 options page. The mapping is stored in `chrome.storage`.
@@ -330,8 +331,8 @@ CSP bypass or it doesn't, regardless of how it's invoked).
 
 1. **Toolbar button:** Click runs the user's chosen bookmarklet on the current
    tab's page.
-2. **Keyboard shortcuts:** Up to 4 configurable shortcuts, each runs a
-   user-chosen bookmarklet.
+2. **Keyboard shortcuts:** 3 configurable shortcut slots (plus 1 for the
+   toolbar button via `_execute_action`), each runs a user-chosen bookmarklet.
 3. **Options page:** Two sections:
    - "Toolbar Bookmarklet" — dropdown to pick which bookmarklet runs on click
    - "Keyboard Bookmarklets" — up to 4 dropdowns to assign bookmarklets to
@@ -350,7 +351,7 @@ CSP bypass or it doesn't, regardless of how it's invoked).
 
 - Monaco editor or any bookmarklet editing
 - Creating/deleting bookmarklets
-- More than 4 keyboard shortcuts (multi-instance workaround deferred)
+- More than 3 custom keyboard shortcuts (multi-instance workaround deferred)
 - Custom keyboard shortcut assignment from within the options page (delegated to
   Chrome's built-in UI)
 - `<meta>` tag CSP removal (requires `debugger` API + `<all_urls>` — too

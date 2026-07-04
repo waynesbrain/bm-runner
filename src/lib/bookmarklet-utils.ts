@@ -23,7 +23,6 @@ const DEFAULT_CONFIG: AppConfig = {
     'run-bookmarklet-1': null,
     'run-bookmarklet-2': null,
     'run-bookmarklet-3': null,
-    'run-bookmarklet-4': null,
   },
   cspDisabled: {},
 };

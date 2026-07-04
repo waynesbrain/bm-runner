@@ -21,7 +21,6 @@ const SHORTCUT_COMMANDS = [
   'run-bookmarklet-1',
   'run-bookmarklet-2',
   'run-bookmarklet-3',
-  'run-bookmarklet-4',
 ];
 
 let currentConfig: AppConfig | null = null;
