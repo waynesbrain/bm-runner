@@ -189,3 +189,19 @@ footer a:hover, .card a:hover {
 .shortcut-field label {
   min-width: 90px;
 }
+
+/* Debug help */
+.debug-help {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+.debug-help kbd {
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.8rem;
+}

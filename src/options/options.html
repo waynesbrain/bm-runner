@@ -63,13 +63,21 @@
     <!-- Debug -->
     <section class="card">
       <h2>Debug</h2>
-      <p>Enable debug logging to the browser console for troubleshooting.</p>
       <div class="field">
         <label class="checkbox-label">
           <input type="checkbox" id="debug-toggle">
           Enable debug logging
         </label>
       </div>
+      <p class="debug-help">
+        When enabled, <code>[bm-runner]</code> messages are logged to the
+        <strong>service worker console</strong> — not the regular page DevTools
+        (<kbd>F12</kbd>). To see them, go to
+        <a href="#" id="extensions-link">chrome://extensions</a>,
+        find <strong>Bookmarklet Runner</strong>, and click the
+        <strong>service worker</strong> link on its card. That opens a separate
+        DevTools window where the logs appear.
+      </p>
     </section>
 
     <!-- Save -->

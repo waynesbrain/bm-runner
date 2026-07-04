@@ -217,6 +217,12 @@ function bindEvents(): void {
       });
     });
   }
+
+  // Extensions link — set the href dynamically so it includes the extension ID
+  const extLink = document.getElementById('extensions-link') as HTMLAnchorElement | null;
+  if (extLink) {
+    extLink.href = `chrome://extensions/?id=${chrome.runtime.id}`;
+  }
 }
 
 // ---------------------------------------------------------------------------
