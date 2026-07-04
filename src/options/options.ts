@@ -12,6 +12,7 @@ import {
 
 const toolbarPicker = document.getElementById('toolbar-picker') as HTMLSelectElement;
 const toolbarCsp = document.getElementById('toolbar-csp') as HTMLInputElement;
+const debugToggle = document.getElementById('debug-toggle') as HTMLInputElement;
 const shortcutSlots = document.getElementById('shortcut-slots') as HTMLDivElement;
 const emptyState = document.getElementById('empty-state') as HTMLElement;
 const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
@@ -43,6 +44,9 @@ async function init(): Promise<void> {
   renderToolbarSection();
   renderShortcutSection();
   populateShortcutSlots();
+
+  // Set debug toggle from stored config
+  debugToggle.checked = currentConfig!.debugEnabled;
 
   bindEvents();
 }
@@ -268,6 +272,7 @@ async function saveSettings(): Promise<void> {
     toolbarBookmarklet: toolbarSelection,
     shortcutBookmarklets: shortcutSelections,
     cspDisabled,
+    debugEnabled: debugToggle.checked,
   };
 
   await saveConfig(newConfig);

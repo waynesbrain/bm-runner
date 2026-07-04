@@ -15,6 +15,8 @@ export interface AppConfig {
   shortcutBookmarklets: Record<string, string | null>;
   /** bookmarklet ID → whether to strip CSP before injection */
   cspDisabled: Record<string, boolean>;
+  /** Whether debug-level console logging is enabled */
+  debugEnabled: boolean;
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -25,6 +27,7 @@ const DEFAULT_CONFIG: AppConfig = {
     'run-bookmarklet-3': null,
   },
   cspDisabled: {},
+  debugEnabled: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -202,6 +205,7 @@ export async function loadConfig(): Promise<AppConfig> {
         cspDisabled: {
           ...stored?.cspDisabled,
         },
+        debugEnabled: stored?.debugEnabled ?? DEFAULT_CONFIG.debugEnabled,
       });
     });
   });
