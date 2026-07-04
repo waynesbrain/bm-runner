@@ -50,11 +50,11 @@ export interface DrawingOptions {
 export interface LetterOptions extends DrawingOptions {
   /** Background fill colour (default: '#2563eb') */
   bgColor?: string;
-  /** Text fill colour (default: '#ffffff') */
-  textColor?: string;
   /** CSS font-family value (default: 'monospace').  A fallback of `monospace`
    * is appended automatically unless the caller already provides one. */
   fontFamily?: FontFamily;
+  /** Text fill colour (default: '#ffffff') */
+  textColor?: string;
 }
 
 /**
@@ -68,8 +68,8 @@ export function drawLetter(letter: string, options: LetterOptions): void {
   const {
     canvas,
     ctx,
-    bgColor = '#2563eb',
-    textColor = '#ffffff',
+    bgColor = '#626262',
+    textColor = '#000000',
     fontFamily: rawFontFamily = 'monospace',
   } = options;
 
