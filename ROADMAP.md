@@ -5,6 +5,8 @@
 - ~~Open options in new tab when toolbar button bookmarklet undefined.~~
 - ~~Save options automatically.~~
 - ~~Add an undo feature to undo changes made while the options page is open.~~
+- Options page dark mode.
+- New default icon instead of 🟦.
 
 # Mileston Version 2.0.0
 
