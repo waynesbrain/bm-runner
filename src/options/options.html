@@ -1,100 +1,121 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Bookmarklet Runner — Options</title>
-  <link rel="stylesheet" href="options.css">
-</head>
-<body>
-  <header>
-    <h1>Bookmarklet Runner</h1>
-    <p class="subtitle">Run bookmarklets from the toolbar and keyboard shortcuts.</p>
-  </header>
+  <head>
+    <meta charset="utf-8" />
+    <title>Bookmarklet Runner — Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Bookmarklet Runner</h1>
+      <p class="subtitle">
+        Run bookmarklets from the toolbar and keyboard shortcuts.
+      </p>
+    </header>
 
-  <main>
-    <!-- Auto-save status -->
-    <div class="actions">
-      <div class="undo-actions">
-        <button id="undo-btn" class="undo" title="Undo the last change" disabled>Undo</button>
-        <button id="undo-all-btn" class="undo" title="Undo all changes" disabled>Undo All Changes</button>
+    <main>
+      <!-- Auto-save status -->
+      <div class="actions">
+        <div class="undo-actions">
+          <button
+            id="undo-btn"
+            class="undo"
+            title="Undo the last change"
+            disabled
+          >
+            Undo
+          </button>
+          <button
+            id="undo-all-btn"
+            class="undo"
+            title="Undo all changes"
+            disabled
+          >
+            Undo All Changes
+          </button>
+        </div>
+        <span id="save-status"></span>
       </div>
-      <span id="save-status"></span>
-    </div>
 
-    <!-- Toolbar Bookmarklet -->
-    <section class="card">
-      <h2>Toolbar Bookmarklet</h2>
-      <p>Choose which bookmarklet runs when you click the toolbar button.</p>
-      <div class="field">
-        <label>Bookmarklet:</label>
-        <div id="toolbar-picker-container"></div>
-      </div>
-      <div class="field">
-        <label class="checkbox-label">
-          <input type="checkbox" id="toolbar-csp">
-          Disable CSP for this bookmarklet
-        </label>
-      </div>
-    </section>
+      <!-- Toolbar Bookmarklet -->
+      <section class="card">
+        <h2>Toolbar Bookmarklet</h2>
+        <p>Choose which bookmarklet runs when you click the toolbar button.</p>
+        <div class="field">
+          <label>Bookmarklet:</label>
+          <div id="toolbar-picker-container"></div>
+        </div>
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" id="toolbar-csp" />
+            Disable CSP for this bookmarklet
+          </label>
+        </div>
+      </section>
 
-    <!-- Keyboard Bookmarklets -->
-    <section class="card">
-      <h2>Keyboard Shortcuts</h2>
+      <!-- Keyboard Bookmarklets -->
+      <section class="card">
+        <h2>Keyboard Shortcuts</h2>
+        <p>
+          Assign bookmarklets to keyboard shortcuts. To change the actual key
+          bindings, visit
+          <a href="#" id="shortcuts-link">chrome://extensions/shortcuts</a>
+          (this link only works when pasted into the address bar).
+        </p>
+
+        <div id="shortcut-slots">
+          <!-- Populated by options.ts -->
+        </div>
+      </section>
+
+      <!-- Empty state -->
+      <section class="card" id="empty-state" style="display: none">
+        <h2>No Bookmarklets Found</h2>
+        <p>
+          You don't have any bookmarklets in your bookmarks yet. To create one:
+        </p>
+        <ol>
+          <li>
+            Right-click your bookmarks bar and choose <strong>Add page</strong>
+          </li>
+          <li>
+            Set the <strong>URL</strong> to a <code>javascript:</code> URL (e.g.
+            <code>javascript:alert('Hello, world!')</code>)
+          </li>
+          <li>Give it a name and save</li>
+        </ol>
+        <p>Then come back to this page — your bookmarklet will appear here.</p>
+      </section>
+
+      <!-- Debug -->
+      <section class="card">
+        <h2>Debug</h2>
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" id="debug-toggle" />
+            Enable debug logging
+          </label>
+        </div>
+        <p class="debug-help">
+          When enabled, <code>[bm-runner]</code> messages are logged to the
+          <strong>service worker console</strong> — not the regular page
+          DevTools (<kbd>F12</kbd>). To see them, go to
+          <span class="selectable-url" id="extensions-url"
+            >chrome://extensions</span
+          >, find <strong>Bookmarklet Runner</strong>, and click the
+          <strong>service worker</strong> link on its card. That opens a
+          separate DevTools window where the logs appear.
+        </p>
+      </section>
+    </main>
+
+    <footer>
       <p>
-        Assign bookmarklets to keyboard shortcuts. To change the actual key
-        bindings, visit
-        <a href="#" id="shortcuts-link">chrome://extensions/shortcuts</a>
-        (this link only works when pasted into the address bar).
+        <a href="#" id="shortcuts-link-footer">Customize keyboard shortcuts</a>
+        (opens chrome://extensions/shortcuts — paste into your address bar)
       </p>
+    </footer>
 
-      <div id="shortcut-slots">
-        <!-- Populated by options.ts -->
-      </div>
-    </section>
-
-    <!-- Empty state -->
-    <section class="card" id="empty-state" style="display:none">
-      <h2>No Bookmarklets Found</h2>
-      <p>
-        You don't have any bookmarklets in your bookmarks yet. To create one:
-      </p>
-      <ol>
-        <li>Right-click your bookmarks bar and choose <strong>Add page</strong></li>
-        <li>Set the <strong>URL</strong> to a <code>javascript:</code> URL
-          (e.g. <code>javascript:alert('Hello, world!')</code>)</li>
-        <li>Give it a name and save</li>
-      </ol>
-      <p>Then come back to this page — your bookmarklet will appear here.</p>
-    </section>
-
-    <!-- Debug -->
-    <section class="card">
-      <h2>Debug</h2>
-      <div class="field">
-        <label class="checkbox-label">
-          <input type="checkbox" id="debug-toggle">
-          Enable debug logging
-        </label>
-      </div>
-      <p class="debug-help">
-        When enabled, <code>[bm-runner]</code> messages are logged to the
-        <strong>service worker console</strong> — not the regular page DevTools
-        (<kbd>F12</kbd>). To see them, go to
-        <span class="selectable-url" id="extensions-url">chrome://extensions</span>,
-        find <strong>Bookmarklet Runner</strong>, and click the
-        <strong>service worker</strong> link on its card. That opens a separate
-        DevTools window where the logs appear.
-      </p>
-    </section>
-  </main>
-
-  <footer>
-    <p>
-      <a href="#" id="shortcuts-link-footer">Customize keyboard shortcuts</a>
-      (opens chrome://extensions/shortcuts — paste into your address bar)
-    </p>
-  </footer>
-
-  <script src="options.js"></script>
-</body>
+    <script src="options.js"></script>
+  </body>
 </html>

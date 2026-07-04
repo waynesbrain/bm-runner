@@ -24,9 +24,9 @@ export interface AppConfig {
 const DEFAULT_CONFIG: AppConfig = {
   toolbarBookmarklet: null,
   shortcutBookmarklets: {
-    'run-bookmarklet-1': null,
-    'run-bookmarklet-2': null,
-    'run-bookmarklet-3': null,
+    "run-bookmarklet-1": null,
+    "run-bookmarklet-2": null,
+    "run-bookmarklet-3": null,
   },
   cspDisabled: {},
   debugEnabled: false,
@@ -67,7 +67,7 @@ function walkTree(
  * and anything else gets bracketed.
  */
 function rootPath(folderName: string): string {
-  if (folderName === 'Bookmarks bar') return '/';
+  if (folderName === "Bookmarks bar") return "/";
   return `[${folderName}]/`;
 }
 
@@ -77,10 +77,10 @@ function rootPath(folderName: string): string {
  */
 function isBookmarklet(url: string): boolean {
   const trimmed = url.trim();
-  if (!trimmed.startsWith('javascript:')) return false;
+  if (!trimmed.startsWith("javascript:")) return false;
   // Filter out common non-bookmarklet JS URLs
-  const body = trimmed.slice('javascript:'.length).trim();
-  if (!body || body === 'void(0)' || body === 'void(0);') return false;
+  const body = trimmed.slice("javascript:".length).trim();
+  if (!body || body === "void(0)" || body === "void(0);") return false;
   return true;
 }
 
@@ -112,7 +112,7 @@ export async function getAllBookmarklets(): Promise<BookmarkletInfo[]> {
  */
 export function decodeBookmarklet(url: string): string {
   const trimmed = url.trim();
-  const jsPrefix = 'javascript:';
+  const jsPrefix = "javascript:";
   if (trimmed.startsWith(jsPrefix)) {
     const encoded = trimmed.slice(jsPrefix.length);
     return encoded.replace(/%([0-9A-Fa-f]{2})/g, (_match, hex) =>
@@ -131,7 +131,7 @@ const MAX_TITLE_LENGTH = 35;
 /** Truncate a bookmarklet title for display in the toolbar tooltip. */
 export function truncateTitle(title: string): string {
   if (title.length <= MAX_TITLE_LENGTH) return title;
-  return title.slice(0, MAX_TITLE_LENGTH - 1) + '…';
+  return title.slice(0, MAX_TITLE_LENGTH - 1) + "…";
 }
 
 // ---------------------------------------------------------------------------
@@ -155,7 +155,7 @@ export async function disableCspForTab(tabId: number): Promise<void> {
           type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
           responseHeaders: [
             {
-              header: 'content-security-policy',
+              header: "content-security-policy",
               operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
             },
           ],
@@ -194,9 +194,9 @@ export async function executeBookmarklet(
 ): Promise<void> {
   await chrome.scripting.executeScript({
     target: { tabId },
-    world: 'MAIN',
+    world: "MAIN",
     func: (src: string) => {
-      const script = document.createElement('script');
+      const script = document.createElement("script");
       script.textContent = src;
       (document.head || document.documentElement).appendChild(script);
       script.remove();
@@ -215,14 +215,14 @@ export async function executeBookmarklet(
  */
 export function isScriptableUrl(url: string | undefined): boolean {
   if (!url) return false;
-  return url.startsWith('http://') || url.startsWith('https://');
+  return url.startsWith("http://") || url.startsWith("https://");
 }
 
 // ---------------------------------------------------------------------------
 // Config persistence
 // ---------------------------------------------------------------------------
 
-const CONFIG_KEY = 'appConfig';
+const CONFIG_KEY = "appConfig";
 
 export async function loadConfig(): Promise<AppConfig> {
   return new Promise((resolve) => {

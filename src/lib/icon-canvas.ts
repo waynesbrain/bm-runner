@@ -107,5 +107,5 @@ export function drawLetter(letter: string, options: LetterOptions): void {
   const baselineY = margin + m.actualBoundingBoxAscent;
 
   ctx.fillStyle = textColor;
-  ctx.fillText(letter, (canvas.width / 2) + (canvas.width / 16), baselineY);
+  ctx.fillText(letter, canvas.width / 2 + canvas.width / 16, baselineY);
 }

@@ -8,9 +8,9 @@ import {
   truncateTitle,
   loadConfig,
   type AppConfig,
-} from './lib/bookmarklet-utils.js';
-import { log, warn, error, setDebugEnabled } from './lib/debug-log.js';
-import { drawLetter } from './lib/icon-canvas.js';
+} from "./lib/bookmarklet-utils.js";
+import { log, warn, error, setDebugEnabled } from "./lib/debug-log.js";
+import { drawLetter } from "./lib/icon-canvas.js";
 
 // ---------------------------------------------------------------------------
 // Toolbar button
@@ -26,23 +26,25 @@ async function updateToolbar(config?: AppConfig): Promise<void> {
     chrome.action.setTitle({ title });
 
     // Dynamically render an icon from the first letter of the bookmarklet title.
-    const letter = info.name.trim().charAt(0).toUpperCase() || 'B';
+    const letter = info.name.trim().charAt(0).toUpperCase() || "B";
     const imageData: Record<number, ImageData> = {};
     for (const size of TOOLBAR_ICON_SIZES) {
       const canvas = new OffscreenCanvas(size, size);
-      const ctx = canvas.getContext('2d')!;
+      const ctx = canvas.getContext("2d")!;
       drawLetter(letter, { canvas, ctx });
       imageData[size] = ctx.getImageData(0, 0, size, size);
     }
     chrome.action.setIcon({ imageData });
   } else {
-    chrome.action.setTitle({ title: 'Bookmarklet Runner (no bookmarklet configured)' });
+    chrome.action.setTitle({
+      title: "Bookmarklet Runner (no bookmarklet configured)",
+    });
     // Reset to the static icons declared in the manifest.
     chrome.action.setIcon({
       path: {
-        '16': 'icons/icon-16.png',
-        '48': 'icons/icon-48.png',
-        '128': 'icons/icon-128.png',
+        "16": "icons/icon-16.png",
+        "48": "icons/icon-48.png",
+        "128": "icons/icon-128.png",
       },
     });
   }
@@ -60,7 +62,7 @@ async function updateToolbar(config?: AppConfig): Promise<void> {
 
 // Keep debug flag and toolbar title in sync when the user saves options.
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === 'sync' && changes.appConfig) {
+  if (areaName === "sync" && changes.appConfig) {
     const newConfig = changes.appConfig.newValue as AppConfig | undefined;
     if (newConfig) {
       setDebugEnabled(newConfig.debugEnabled ?? false);
@@ -93,11 +95,11 @@ chrome.commands.onCommand.addListener((command, tab) => {
 // ---------------------------------------------------------------------------
 
 async function handleToolbarClick(tab: chrome.tabs.Tab): Promise<void> {
-  log('Toolbar button clicked', { tabId: tab.id, url: tab.url });
+  log("Toolbar button clicked", { tabId: tab.id, url: tab.url });
 
   const tabId = tab.id;
   if (tabId === undefined) {
-    warn('Toolbar click: no tab ID available');
+    warn("Toolbar click: no tab ID available");
     return;
   }
 
@@ -110,7 +112,7 @@ async function handleToolbarClick(tab: chrome.tabs.Tab): Promise<void> {
 
   const info = await getToolbarBookmarklet();
   if (!info) {
-    log('No toolbar bookmarklet configured — opening options page');
+    log("No toolbar bookmarklet configured — opening options page");
     chrome.runtime.openOptionsPage();
     return;
   }
@@ -130,11 +132,11 @@ async function handleCommand(
   command: string,
   tab: chrome.tabs.Tab,
 ): Promise<void> {
-  log('Keyboard shortcut fired', { command, tabId: tab.id, url: tab.url });
+  log("Keyboard shortcut fired", { command, tabId: tab.id, url: tab.url });
 
   const tabId = tab.id;
   if (tabId === undefined) {
-    warn('Command handler: no tab ID available');
+    warn("Command handler: no tab ID available");
     return;
   }
 
@@ -147,9 +149,7 @@ async function handleCommand(
 
   const info = await getBookmarkletForCommand(command);
   if (!info) {
-    log(
-      `Shortcut "${command}" not configured — opening options page`,
-    );
+    log(`Shortcut "${command}" not configured — opening options page`);
     chrome.runtime.openOptionsPage();
     return;
   }
@@ -189,7 +189,7 @@ async function runBookmarklet(
     try {
       await chrome.scripting.executeScript({
         target: { tabId },
-        world: 'MAIN',
+        world: "MAIN",
         func: (msg: string) => {
           alert(msg);
         },

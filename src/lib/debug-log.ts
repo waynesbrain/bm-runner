@@ -10,7 +10,7 @@ export function setDebugEnabled(value: boolean): void {
   enabled = value;
 }
 
-const PREFIX = '[bm-runner]';
+const PREFIX = "[bm-runner]";
 
 /**
  * Progress / trace-level message. Only emitted when debug logging is enabled.

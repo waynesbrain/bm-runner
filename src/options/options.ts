@@ -6,27 +6,31 @@ import {
   saveConfig,
   type BookmarkletInfo,
   type AppConfig,
-} from '../lib/bookmarklet-utils.js';
+} from "../lib/bookmarklet-utils.js";
 
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
 
-const toolbarPickerContainer = document.getElementById('toolbar-picker-container')!;
-const toolbarCsp = document.getElementById('toolbar-csp') as HTMLInputElement;
-const debugToggle = document.getElementById('debug-toggle') as HTMLInputElement;
-const shortcutSlots = document.getElementById('shortcut-slots') as HTMLDivElement;
-const emptyState = document.getElementById('empty-state') as HTMLElement;
-const saveStatus = document.getElementById('save-status') as HTMLSpanElement;
-const undoBtn = document.getElementById('undo-btn') as HTMLButtonElement;
-const undoAllBtn = document.getElementById('undo-all-btn') as HTMLButtonElement;
+const toolbarPickerContainer = document.getElementById(
+  "toolbar-picker-container",
+)!;
+const toolbarCsp = document.getElementById("toolbar-csp") as HTMLInputElement;
+const debugToggle = document.getElementById("debug-toggle") as HTMLInputElement;
+const shortcutSlots = document.getElementById(
+  "shortcut-slots",
+) as HTMLDivElement;
+const emptyState = document.getElementById("empty-state") as HTMLElement;
+const saveStatus = document.getElementById("save-status") as HTMLSpanElement;
+const undoBtn = document.getElementById("undo-btn") as HTMLButtonElement;
+const undoAllBtn = document.getElementById("undo-all-btn") as HTMLButtonElement;
 
 const undoStack: AppConfig[] = [];
 
 const SHORTCUT_COMMANDS = [
-  'run-bookmarklet-1',
-  'run-bookmarklet-2',
-  'run-bookmarklet-3',
+  "run-bookmarklet-1",
+  "run-bookmarklet-2",
+  "run-bookmarklet-3",
 ];
 
 let currentConfig: AppConfig | null = null;
@@ -52,85 +56,87 @@ interface CustomSelect {
  * for each bookmarklet option.
  */
 function createCustomSelect(selectedId: string | null): CustomSelect {
-  let value = selectedId ?? '';
+  let value = selectedId ?? "";
   let options: BookmarkletInfo[] = [...bookmarklets];
   let open = false;
 
   // Wrapper
-  const wrapper = document.createElement('div');
-  wrapper.className = 'custom-select';
+  const wrapper = document.createElement("div");
+  wrapper.className = "custom-select";
 
   // Trigger
-  const trigger = document.createElement('div');
-  trigger.className = 'custom-select-trigger';
+  const trigger = document.createElement("div");
+  trigger.className = "custom-select-trigger";
   trigger.tabIndex = 0;
 
-  const triggerText = document.createElement('span');
-  triggerText.className = 'custom-select-trigger-text';
+  const triggerText = document.createElement("span");
+  triggerText.className = "custom-select-trigger-text";
 
-  const arrow = document.createElement('span');
-  arrow.className = 'custom-select-arrow';
-  arrow.textContent = '▾';
+  const arrow = document.createElement("span");
+  arrow.className = "custom-select-arrow";
+  arrow.textContent = "▾";
 
   trigger.appendChild(triggerText);
   trigger.appendChild(arrow);
   wrapper.appendChild(trigger);
 
   // Dropdown
-  const dropdown = document.createElement('div');
-  dropdown.className = 'custom-select-dropdown';
+  const dropdown = document.createElement("div");
+  dropdown.className = "custom-select-dropdown";
   wrapper.appendChild(dropdown);
 
   // --- Methods ---
 
   function renderSelected(): void {
-    triggerText.innerHTML = '';
+    triggerText.innerHTML = "";
     if (value) {
       const bm = options.find((b) => b.id === value);
       if (bm) {
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'custom-select-title';
+        const titleSpan = document.createElement("span");
+        titleSpan.className = "custom-select-title";
         titleSpan.textContent = bm.title;
 
-        const pathSpan = document.createElement('span');
-        pathSpan.className = 'custom-select-path';
+        const pathSpan = document.createElement("span");
+        pathSpan.className = "custom-select-path";
         pathSpan.textContent = bm.path;
 
         triggerText.appendChild(titleSpan);
         triggerText.appendChild(pathSpan);
       } else {
-        triggerText.textContent = '(deleted)';
+        triggerText.textContent = "(deleted)";
       }
     } else {
-      triggerText.textContent = '(none selected)';
+      triggerText.textContent = "(none selected)";
     }
   }
 
   function renderOptions(): void {
-    dropdown.innerHTML = '';
+    dropdown.innerHTML = "";
 
     // None option
-    const noneItem = document.createElement('div');
-    noneItem.className = 'custom-select-option' + (value === '' ? ' selected' : '');
-    noneItem.textContent = '(none selected)';
-    noneItem.addEventListener('click', () => select(''));
+    const noneItem = document.createElement("div");
+    noneItem.className =
+      "custom-select-option" + (value === "" ? " selected" : "");
+    noneItem.textContent = "(none selected)";
+    noneItem.addEventListener("click", () => select(""));
     dropdown.appendChild(noneItem);
 
     for (const bm of options) {
-      const item = document.createElement('div');
-      item.className = 'custom-select-option' + (bm.id === value ? ' selected' : '');
+      const item = document.createElement("div");
+      item.className =
+        "custom-select-option" + (bm.id === value ? " selected" : "");
 
-      const titleSpan = document.createElement('span');
-      titleSpan.className = 'custom-select-title';
+      const titleSpan = document.createElement("span");
+      titleSpan.className = "custom-select-title";
       titleSpan.textContent = bm.title;
 
-      const pathSpan = document.createElement('span');
-      pathSpan.className = 'custom-select-path';
+      const pathSpan = document.createElement("span");
+      pathSpan.className = "custom-select-path";
       pathSpan.textContent = bm.path;
 
       item.appendChild(titleSpan);
       item.appendChild(pathSpan);
-      item.addEventListener('click', () => select(bm.id));
+      item.addEventListener("click", () => select(bm.id));
       dropdown.appendChild(item);
     }
   }
@@ -142,29 +148,29 @@ function createCustomSelect(selectedId: string | null): CustomSelect {
       renderOptions();
     }
     close();
-    wrapper.dispatchEvent(new Event('change', { bubbles: true }));
+    wrapper.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
   function openDropdown(): void {
     open = true;
-    dropdown.classList.add('open');
+    dropdown.classList.add("open");
     renderOptions();
   }
 
   function close(): void {
     open = false;
-    dropdown.classList.remove('open');
+    dropdown.classList.remove("open");
   }
 
   // --- Events ---
 
-  trigger.addEventListener('click', () => {
+  trigger.addEventListener("click", () => {
     if (open) close();
     else openDropdown();
   });
 
-  trigger.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+  trigger.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       if (open) close();
       else openDropdown();
@@ -172,7 +178,7 @@ function createCustomSelect(selectedId: string | null): CustomSelect {
   });
 
   // Close on outside click
-  document.addEventListener('click', (e) => {
+  document.addEventListener("click", (e) => {
     if (!wrapper.contains(e.target as Node)) {
       close();
     }
@@ -185,7 +191,7 @@ function createCustomSelect(selectedId: string | null): CustomSelect {
   return {
     el: wrapper,
     setValue(id: string | null): void {
-      value = id ?? '';
+      value = id ?? "";
       renderSelected();
     },
     getValue(): string {
@@ -195,7 +201,7 @@ function createCustomSelect(selectedId: string | null): CustomSelect {
       options = items;
       // If current value no longer exists, clear it
       if (value && !options.some((b) => b.id === value)) {
-        value = '';
+        value = "";
       }
       renderSelected();
     },
@@ -216,7 +222,7 @@ async function init(): Promise<void> {
   ]);
 
   if (bookmarklets.length === 0) {
-    emptyState.style.display = '';
+    emptyState.style.display = "";
   }
 
   renderToolbarSection();
@@ -235,32 +241,32 @@ function renderToolbarSection(): void {
 }
 
 function renderShortcutSection(): void {
-  shortcutSlots.innerHTML = '';
+  shortcutSlots.innerHTML = "";
 
   for (let i = 0; i < SHORTCUT_COMMANDS.length; i++) {
     const command = SHORTCUT_COMMANDS[i]!;
     const assignedId = currentConfig!.shortcutBookmarklets[command] ?? null;
 
-    const container = document.createElement('div');
-    container.className = 'field shortcut-field';
+    const container = document.createElement("div");
+    container.className = "field shortcut-field";
 
-    const label = document.createElement('label');
+    const label = document.createElement("label");
     label.textContent = `Shortcut #${i + 1}:`;
 
     const sel = createCustomSelect(assignedId);
     shortcutSelects.push(sel);
     sel.el.dataset.command = command;
 
-    const cspLabel = document.createElement('label');
-    cspLabel.className = 'checkbox-label';
+    const cspLabel = document.createElement("label");
+    cspLabel.className = "checkbox-label";
 
-    const cspCheckbox = document.createElement('input');
-    cspCheckbox.type = 'checkbox';
+    const cspCheckbox = document.createElement("input");
+    cspCheckbox.type = "checkbox";
     cspCheckbox.dataset.command = command;
-    cspCheckbox.className = 'csp-checkbox';
+    cspCheckbox.className = "csp-checkbox";
 
     cspLabel.appendChild(cspCheckbox);
-    cspLabel.appendChild(document.createTextNode(' Disable CSP'));
+    cspLabel.appendChild(document.createTextNode(" Disable CSP"));
 
     container.appendChild(label);
     container.appendChild(sel.el);
@@ -309,19 +315,19 @@ function bindEvents(): void {
   const autoSave = debounce(() => saveSettings(), 400);
 
   // Toolbar picker: update CSP checkbox + auto-save
-  toolbarSelect.el.addEventListener('change', () => {
+  toolbarSelect.el.addEventListener("change", () => {
     updateToolbarCspCheckbox();
     autoSave();
   });
 
   // Toolbar CSP checkbox: auto-save
-  toolbarCsp.addEventListener('change', () => {
+  toolbarCsp.addEventListener("change", () => {
     autoSave();
   });
 
   // Shortcut pickers: update CSP checkboxes + auto-save
   for (const sel of shortcutSelects) {
-    sel.el.addEventListener('change', () => {
+    sel.el.addEventListener("change", () => {
       updateShortcutCspCheckboxes();
       autoSave();
     });
@@ -334,50 +340,59 @@ function bindEvents(): void {
       `input.csp-checkbox[data-command="${command}"]`,
     );
     if (checkbox) {
-      checkbox.addEventListener('change', () => {
+      checkbox.addEventListener("change", () => {
         autoSave();
       });
     }
   }
 
   // Debug toggle: auto-save
-  debugToggle.addEventListener('change', () => {
+  debugToggle.addEventListener("change", () => {
     autoSave();
   });
 
   // Undo button
-  undoBtn.addEventListener('click', () => {
+  undoBtn.addEventListener("click", () => {
     undoLastChange();
   });
 
   // Undo All button
-  undoAllBtn.addEventListener('click', () => {
+  undoAllBtn.addEventListener("click", () => {
     undoAllChanges();
   });
 
   // Shortcuts link
-  for (const link of ['shortcuts-link', 'shortcuts-link-footer']) {
-    document.getElementById(link)?.addEventListener('click', (e) => {
+  for (const link of ["shortcuts-link", "shortcuts-link-footer"]) {
+    document.getElementById(link)?.addEventListener("click", (e) => {
       e.preventDefault();
-      navigator.clipboard.writeText('chrome://extensions/shortcuts').then(() => {
-        showStatus('Copied! Paste into your address bar.', 'success');
-      }).catch(() => {
-        showStatus('Go to chrome://extensions/shortcuts in your address bar.', '');
-      });
+      navigator.clipboard
+        .writeText("chrome://extensions/shortcuts")
+        .then(() => {
+          showStatus("Copied! Paste into your address bar.", "success");
+        })
+        .catch(() => {
+          showStatus(
+            "Go to chrome://extensions/shortcuts in your address bar.",
+            "",
+          );
+        });
     });
   }
 
   // Extensions URL
-  const extUrl = document.getElementById('extensions-url');
+  const extUrl = document.getElementById("extensions-url");
   if (extUrl) {
     const url = `chrome://extensions/?id=${chrome.runtime.id}`;
     extUrl.textContent = url;
-    extUrl.addEventListener('click', () => {
-      navigator.clipboard.writeText(url).then(() => {
-        showStatus('Copied! Paste into your address bar.', 'success');
-      }).catch(() => {
-        showStatus(`Go to ${url} in your address bar.`, '');
-      });
+    extUrl.addEventListener("click", () => {
+      navigator.clipboard
+        .writeText(url)
+        .then(() => {
+          showStatus("Copied! Paste into your address bar.", "success");
+        })
+        .catch(() => {
+          showStatus(`Go to ${url} in your address bar.`, "");
+        });
     });
   }
 }
@@ -395,7 +410,9 @@ async function saveSettings(): Promise<void> {
     shortcutSelections[command] = sel.getValue() || null;
   }
 
-  const cspDisabled: Record<string, boolean> = { ...currentConfig!.cspDisabled };
+  const cspDisabled: Record<string, boolean> = {
+    ...currentConfig!.cspDisabled,
+  };
 
   if (toolbarSelection) {
     cspDisabled[toolbarSelection] = toolbarCsp.checked;
@@ -439,7 +456,7 @@ async function saveSettings(): Promise<void> {
 
   await saveConfig(newConfig);
   currentConfig = newConfig;
-  showStatus('Saved', 'success');
+  showStatus("Saved", "success");
 }
 
 // ---------------------------------------------------------------------------
@@ -464,7 +481,7 @@ function undoLastChange(): void {
   // Persist the undone state
   saveConfig(previousConfig);
   currentConfig = previousConfig;
-  showStatus('Undone', 'success');
+  showStatus("Undone", "success");
 }
 
 function undoAllChanges(): void {
@@ -479,7 +496,7 @@ function undoAllChanges(): void {
   applyConfig(originalConfig);
   saveConfig(originalConfig);
   currentConfig = originalConfig;
-  showStatus('All changes undone', 'success');
+  showStatus("All changes undone", "success");
 }
 
 /** Apply a config snapshot to all UI controls without firing change events. */
@@ -511,8 +528,8 @@ function showStatus(message: string, className: string): void {
   saveStatus.textContent = message;
   saveStatus.className = className;
   setTimeout(() => {
-    saveStatus.textContent = '';
-    saveStatus.className = '';
+    saveStatus.textContent = "";
+    saveStatus.className = "";
   }, 2500);
 }
 

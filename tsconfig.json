@@ -13,8 +13,14 @@
     "sourceMap": false,
     "outDir": "ext",
     "rootDir": "src",
-    "types": ["chrome"]
+    "types": [
+      "chrome"
+    ]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/options/*.ts"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/options/*.ts"
+  ]
 }
